@@ -14,7 +14,7 @@ class Downloader:
     """This class is used to handle the Download requests that arrive at the server."""
 
     def __init__(self, url, filename='', work_path='', block_size=1024 * 1024, headers={}, timeout=2, ssl_context=None,
-                 terminal_mode=False, url_check=True, ftp_user='', ftp_password=''):
+                 terminal_mode=False, url_check=False, ftp_user='', ftp_password=''):
         # Parse chinese to ascii and delete parameters.
         self.url = url
         self.url_check = url_check
@@ -53,7 +53,7 @@ class Downloader:
         # Progress speed.
         self._now_time = 0
         self._speed_pre_second = 0
-        # Error detect
+        # Error detect.
         self._error_timer = 0
 
     def download(self):
@@ -199,7 +199,7 @@ class Downloader:
             return False
 
     def _create_block_list(self):
-        # Attention: request length is closed interval,but python array is different.
+        # Attention: request length is closed interval, but python array is different.
         block_number = int((self.content_length_size - self.content_length_now) / self.block_size) + 1
         l = [x * self.block_size for x in range(0, block_number)]
         if l[-1] > self.content_length_size:
@@ -269,9 +269,12 @@ class Downloader:
             self.work_path = self.work_path + '/'
 
     def _check_url(self):
-        # Delete get parameters.
         if self.url_check:
+            # Delete get parameters.
             self.url = self.url.split('?', 1)[0]
+            # Add protocol if not exist.
+            if self.url.split('://', 1)[0] != 'http' or 'https':
+                self.url = 'http://' + self.url
         # Parse chinese to ascii.
         self.url = urllib.parse.quote(self.url, safe='/:?=@&[]')
 
@@ -283,12 +286,9 @@ if __name__ == "__main__":
     # url = 'https://download.jetbrains.8686c.com/idea/ideaIU-2016.3.2.dmg'
     # url = 'ftp://ftp.cau.edu.cn/Upload/FOR_MAC/Programming/RStudio-0.98.1091.dmg'
     # url = 'ftp://8:8@xia.dl1234.com:8807/[电影天堂www.dy2018.com]美国队长3DVD中英双字.rmvb'
-    url = 'http://pt.cau.edu.cn/download.php?tid=155042'
-
+    url = 'http://bbs.qn.img-space.com/g1/M00/04/CC/Cg-4rFYpzKeIdRrfABT6FyBFiNgAAM9QwNqvW8AFPov052.jpg?imageView2/2/w/1024/q/90/ignore-error/1/'
+    url = 'http://news.cau.edu.cn/art/2017/3/3/art_8769_502290.html'
     a = Downloader(url,
-                   work_path='/Users/zyh/github/Mini-Spider/test',
-                   block_size=1024 * 1024 * 10,
-                   terminal_mode=False,
-                   url_check=False
+                   work_path='/Users/zyh/github/Mini-Spider/test'
                    )
     a.download()
