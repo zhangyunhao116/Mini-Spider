@@ -13,10 +13,13 @@ from ssl import _create_unverified_context
 class Downloader:
     """This class is used to handle the Download requests that arrive at the server."""
 
-    def __init__(self, url, filename='', work_path='', block_size=1024 * 1024, headers={}, timeout=2, ssl_context=None,
+    def __init__(self, original_url='', filename='', work_path='', block_size=1024 * 1024, headers={}, timeout=2,
+                 ssl_context=None,
                  terminal_mode=False, url_check=False, ftp_user='', ftp_password=''):
         # Parse chinese to ascii and delete parameters.
-        self.url = url
+        if original_url == '':
+            raise Exception("Downloader need URL !")
+        self.url = original_url
         self.url_check = url_check
         self._check_url()
         # If filename is not specified,it is equal to the default value provided by url.
