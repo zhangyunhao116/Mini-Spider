@@ -206,6 +206,7 @@ class MiniSpider:
         choose_block = 0
         specific_pattern = self.make_specific_pattern(result[choose_block])
 
+
         self._display_result(result)
 
     def make_specific_pattern(self, specific_block_list):
@@ -243,6 +244,8 @@ class MiniSpider:
                     temp.append('[0-9]')
                 else:
                     temp.append(j)
+            # Format list.
+            pass
             pattern_block = ''.join(temp)
             last_block = last_block + '/' + pattern_block
         if flag_only_one:
