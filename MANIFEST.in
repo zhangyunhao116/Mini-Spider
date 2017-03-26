@@ -1,0 +1,4 @@
+include *.txt
+include *.rst
+include mini-spider
+include README.md

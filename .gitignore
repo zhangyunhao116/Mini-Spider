@@ -1,0 +1,10 @@
+
+*.pyc
+
+*.xml
+
+*.iml
+
+*.db
+
+*.temp
