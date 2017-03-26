@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+
+import minispider
+
+if __name__ == '__main__':
+    minispider.main()

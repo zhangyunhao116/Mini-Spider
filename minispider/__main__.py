@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import re
 import urllib.request
 import urllib.parse
@@ -5,7 +6,7 @@ import difflib
 import argparse
 
 from ssl import _create_unverified_context
-from sql import MiniSpiderSQL
+from .sql import MiniSpiderSQL
 
 
 class MiniSpider:
@@ -271,7 +272,7 @@ def main():
     parser = argparse.ArgumentParser(prog='MiniSpider', description=description, usage=usage)
 
     # Add argument.
-    analysis_help = 'Analysis a URL to make your extractor.'
+    analysis_help = 'Analysis a URL to make your extractor.suffix name follow the url.'
     parser.add_argument('-a', help=analysis_help, nargs='+', dest='analysis_url')
 
     similarity_threshold_help = 'Set similarity_threshold,default = 0.6'
@@ -282,9 +283,6 @@ def main():
 
     timeout_help = 'Set timeout.default = 2'
     parser.add_argument('-t', help=timeout_help, nargs=1, dest='time_out', type=float)
-
-    # search_help = 'Set your searching suffix name.'
-    # parser.add_argument('-s', help=search_help, nargs='+', dest='search')
 
     # Parse argument.
     args = parser.parse_args()
