@@ -2,9 +2,10 @@ import re
 import urllib.request
 import urllib.parse
 import difflib
-import time
+import argparse
 
 from ssl import _create_unverified_context
+from sql import MiniSpiderSQL
 
 
 class MiniSpider:
@@ -27,6 +28,8 @@ class MiniSpider:
         self.pattern_list = []
         self.search_list = self._initialize_search(search)
         self.display_number = display_number
+        # Initialize SQL.
+        self.SQL = MiniSpiderSQL()
 
     def _url_read(self):
         req = urllib.request.Request(self.url)
@@ -44,7 +47,13 @@ class MiniSpider:
         self.url = urllib.parse.quote(self.url, safe='/:?=@&[]')
 
     def _handle_match(self, match_list):
+        # Temp function, need rewrite.
         match_list.sort()
+        # Patch.
+        if len(match_list) == 1:
+            temp = []
+            temp.append(match_list)
+            return temp
         result = []
         flag = 0
         for index, item in enumerate(match_list):
@@ -205,8 +214,7 @@ class MiniSpider:
         # Choose specific block to make pattern.
         choose_block = 0
         specific_pattern = self.make_specific_pattern(result[choose_block])
-
-
+        self.SQL.insert_url(result[choose_block])
         self._display_result(result)
 
     def make_specific_pattern(self, specific_block_list):
@@ -256,15 +264,43 @@ class MiniSpider:
         return result_pattern
 
 
+def main():
+    # Make parser for terminal.
+    description = 'MiniSpider makes it easy to create user-friendly spider.'
+    usage = 'mini-spider [OPTION]... [URL]...'
+    parser = argparse.ArgumentParser(prog='MiniSpider', description=description, usage=usage)
+
+    # Add argument.
+    analysis_help = 'Analysis a URL to make your extractor.'
+    parser.add_argument('-a', help=analysis_help, nargs='+', dest='analysis_url')
+
+    similarity_threshold_help = 'Set similarity_threshold,default = 0.6'
+    parser.add_argument('-st', help=similarity_threshold_help, nargs=1, dest='similarity', type=float)
+
+    choose_help = 'Choose which block is you looking for.'
+    parser.add_argument('-c', help=choose_help, nargs=1, dest='choose_block', type=int)
+
+    timeout_help = 'Set timeout.default = 2'
+    parser.add_argument('-t', help=timeout_help, nargs=1, dest='time_out', type=float)
+
+    # search_help = 'Set your searching suffix name.'
+    # parser.add_argument('-s', help=search_help, nargs='+', dest='search')
+
+    # Parse argument.
+    args = parser.parse_args()
+
+    # Parse analysis url.
+    if args.analysis_url[0]:
+        if not args.analysis_url[1]:
+            print('WARNING: Please input what resource you are looking for!')
+        if args.similarity:
+            spider = MiniSpider(args.analysis_url[0], search=args.analysis_url[1:],
+                                similarity_threshold=args.similarity[0])
+            spider.analysis_url()
+        else:
+            spider = MiniSpider(args.analysis_url[0], search=args.analysis_url[1:], similarity_threshold=0.6)
+            spider.analysis_url()
+
+
 if __name__ == '__main__':
-    url = 'http://www.runoob.com/python/python-operators.html#ysf4'
-    url = 'http://www.cnblogs.com/huxi/archive/2010/07/04/1771073.html'
-    q = time.time()
-    a = MiniSpider(url, search=('png'), similarity_threshold=0)
-    a.analysis_url()
-    print(time.time() - q)
-    s = [
-        'http://images.cnblogs.com/cnblogs_com/huxi/Windows-Live-Writer/Python_10A67/pyre_ebb9ce1c-e5e8-4219-a8ae-7ee620d5f9f1.png']
-    pattern = a.make_specific_pattern(s)
-    print(pattern)
-    print(re.findall(pattern, s[0]))
+    main()

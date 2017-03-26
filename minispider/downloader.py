@@ -15,7 +15,7 @@ class Downloader:
 
     def __init__(self, original_url='', filename='', work_path='', block_size=1024 * 1024, headers={}, timeout=2,
                  ssl_context=None,
-                 terminal_mode=False, url_check=False, ftp_user='', ftp_password=''):
+                 terminal_mode=True, url_check=False, ftp_user='', ftp_password=''):
         # Parse chinese to ascii and delete parameters.
         if original_url == '':
             raise Exception("Downloader need URL !")
@@ -264,6 +264,8 @@ class Downloader:
             return False
 
     def _check_work_path(self):
+        if self.work_path == '':
+            return True
         try:
             os.chdir(self.work_path)
         except FileNotFoundError:
