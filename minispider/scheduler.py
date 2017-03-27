@@ -6,17 +6,18 @@ import difflib
 import json
 
 from ssl import _create_unverified_context
-
+from .sql import MiniSpiderSQL
 
 class MiniSpider:
     def __init__(self, original_url=None, timeout=2, search=(), ssl_context=None, url_check=False,
                  similarity_threshold=0.6,
-                 display_number=10):
+                 display_number=20):
         # Parse chinese to ascii and delete parameters.
         if original_url:
             self.url = original_url
             self.url_check = url_check
             self._check_url()
+            self.host = 'http://' + original_url.split('//')[1].split('/')[0]
         # Create ssl context.
         if ssl_context:
             self.ssl_context = ssl_context
@@ -29,6 +30,7 @@ class MiniSpider:
         self.pattern_list = []
         self.search_list = self._initialize_search(search)
         self.display_number = display_number
+        self.result = []
 
     def _url_read(self):
         req = urllib.request.Request(self.url)
@@ -46,45 +48,37 @@ class MiniSpider:
         self.url = urllib.parse.quote(self.url, safe='/:?=@&[]')
 
     def _handle_match(self, match_list):
-        # Temp function, need rewrite.
-        match_list.sort()
-        # Patch.
-        if len(match_list) == 1:
-            temp = []
-            temp.append(match_list)
-            return temp
-        result = []
-        flag = 0
-        for index, item in enumerate(match_list):
-            if self.similar(item, match_list[flag]) > self.similarity_threshold:
-                if index == len(match_list) - 1 and flag == 0:
-                    result.append('*')
-                    for k in range(flag, index):
-                        result.append(match_list[k])
-                    flag = index
-            else:
-                result.append('*')
-                for k in range(flag, index):
-                    result.append(match_list[k])
-                flag = index
-        just_one = 0
-        result_format = []
-        temp = []
-        for index, item in enumerate(result):
-            if index == 0:
-                continue
-            if item == '*':
-                just_one += 1
-                result_format.append(temp)
-                temp = []
-                continue
-            temp.append(item)
-        if just_one == 0:
-            result_format.append(temp)
-        return result_format
+        # If match_list = [], return False.
+        if len(match_list) == 0:
+            return False
 
-    def _display_result(self, result):
-        for index, item in enumerate(result):
+        # Eliminate duplicate and sort().
+        match_list = self.duplicate_eliminate(match_list)
+        match_list.sort()
+
+        # If match_list only have one item.
+        if len(match_list) == 1:
+            self.result.append(match_list)
+            return True
+
+        # Handle.
+        temp = []
+        flag = 0
+
+        for index, item in enumerate(match_list):
+            if self.similar(match_list[flag], item) >= self.similarity_threshold:
+                temp.append(item)
+                continue
+            else:
+                flag = index
+                self.result.append(temp)
+                temp = []
+                temp.append(item)
+        if len(temp):
+            self.result.append(temp)
+
+    def _display_result(self):
+        for index, item in enumerate(self.result):
             print('[%s]:' % index)
             flag = 1
             for i, j in enumerate(item):
@@ -93,7 +87,7 @@ class MiniSpider:
                         print('%s is not displayed' % (len(item) - self.display_number))
                         flag = 0
                     continue
-                print('   %s' % j)
+                print('---(%s)%s' % (i, j))
 
     def _pattern_make(self):
         for i in self.search_list:
@@ -134,21 +128,25 @@ class MiniSpider:
             temp.append(i)
         return temp
 
-    @staticmethod
-    def find_longest_match(match_list):
-        a = match_list[0]
-        b = match_list[1]
-        o = difflib.SequenceMatcher(isjunk=None, a=a, b=b)
-        size = o.find_longest_match(0, len(a), 0, len(b))[2]
+    def find_longest_size(self, match_list):
+        # If only one item, return.
+        if len(match_list) == 1:
+            return len(match_list[0])
+
+        size = len(match_list[0])
         for index, item in enumerate(match_list):
-            if index == 0 or index == len(match_list) - 1 or index == 1:
-                continue
-            else:
-                b = item
-            temp = o.find_longest_match(0, len(a), 0, len(b))[2]
+            if index == len(match_list) - 1:
+                break
+            temp = self._find_longest_match(item, match_list[index + 1])
             if temp < size:
                 size = temp
+
         return size
+
+    @staticmethod
+    def _find_longest_match(str1, str2):
+        o = difflib.SequenceMatcher(isjunk=None, a=str1, b=str2)
+        return o.find_longest_match(0, len(str1), 0, len(str2))[2]
 
     @staticmethod
     def _is_letter(match_str):
@@ -179,13 +177,6 @@ class MiniSpider:
         return _url.rsplit('.', 1)[1]
 
     @staticmethod
-    def _remove_suffix_name(_url, suffix_name):
-        if _url.find(suffix_name[1:]):
-            return _url[0:len(_url) - len(suffix_name) + 1]
-        else:
-            return _url
-
-    @staticmethod
     def duplicate_eliminate(list_input):
         """ Delete all duplicate in a list."""
         result = []
@@ -206,41 +197,43 @@ class MiniSpider:
         return result
 
     def analysis_url(self):
+        # Read URL content.
         content = self._url_read()
-        match_list = []
+        # Make pattern.
         self._pattern_make()
+
+        match_list = []
         for i in self.pattern_list:
             match = re.findall(i, content)
             for j in match:
                 if self._check_match_url(j):
                     match_list.append(j)
+            # Classify the url into certain types.
+            self._handle_match(match_list)
+            match_list = []
         # Check if not match.
-        if not match_list:
+        if not self.result:
+            # Do some thing.
             print('Error!We find nothing!')
             return False
-        # Classify the url into certain types.
-        result = self._handle_match(match_list)
 
         # Save result in temp file.
-        self._save_temp(result)
+        self._save_temp(self.result)
 
         # Print result.
-        self._display_result(result)
+        self._display_result()
 
     def make_specific_pattern(self, specific_block_list):
-        # Delete all duplicate in this list.
-        specific_block_list = self.duplicate_eliminate(specific_block_list)
+        """Make specific pattern for entire URL."""
         # Get longest match block.
-        flag_only_one = 0
-        try:
-            same_size = self.find_longest_match(specific_block_list)
-        except IndexError:
-            flag_only_one = 1
-            same_size = len(specific_block_list[0])
+        same_size = self.find_longest_size(specific_block_list)
+
+        # Get same_block.
         same_block = specific_block_list[0][0:same_size]
-        # Get suffix name and remove suffix name if possible.
+
+        # Get suffix name and add regular expression format.
         suffix_name = '\.' + self._get_suffix_name(specific_block_list[0])
-        same_block = self._remove_suffix_name(same_block, suffix_name)
+
         # Split same block.
         header = same_block.split('//')[0] + '//'
         latter_part = same_block.split('//')[1]
@@ -264,18 +257,42 @@ class MiniSpider:
                     temp.append(j)
             # Format list.
             pass
+
             pattern_block = ''.join(temp)
             last_block = last_block + '/' + pattern_block
-        if flag_only_one:
+        # Check if need supplement.
+        if len(same_block) == len(specific_block_list[0]):
             char_supplement = ''
         else:
             char_supplement = '.+?'
+
         result_pattern = header + host + last_block + char_supplement + suffix_name
+
         return result_pattern
 
-    def choose_block(self, num, start=0, end=0):
+    def choose_block(self, num, start=0, end=None):
         block = self._read_temp()[num]
-        if end is 0:
+        if end is None:
             end = len(block)
-        specific_pattern = self.make_specific_pattern(block[start:end])
+        elif start != end:
+            # Fix python list do not include end.
+            end += 1
+
+        if start == end:
+            # Use one item make specific pattern.
+            specific_pattern = self.make_specific_pattern(block[start:start + 1])
+        else:
+            # Use list make specific pattern.
+            specific_pattern = self.make_specific_pattern(block[start:end])
+
         return specific_pattern
+
+    def start(self):
+        if self.url is None:
+            # If url is not provided, use SQL data.
+            url = MiniSpiderSQL().pop_url()
+        else:
+            url = self.url
+        if url is None:
+            return False
+

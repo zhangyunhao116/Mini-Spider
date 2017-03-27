@@ -8,3 +8,7 @@
 *.db
 
 *.temp
+
+*.extractor
+
+minispider/test.py
