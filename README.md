@@ -34,7 +34,7 @@ $ mini-spider -start
 $ mini-spider -download
 ```
 
-### 安装
+## 安装
 
 安装前注意：
 
@@ -55,7 +55,7 @@ $ python3 setup.py install
 $ pip install mini-spider
 ```
 
-### 使用
+## 使用
 
 1.首先你需要分析一个网站，并输入你想提取的内容（包含下一个网站的地址和你需要的资源），如
 
@@ -99,7 +99,7 @@ $ mini-spider -download
 
 -download 命令为启动下载器下载所需要的内容。
 
-### 当前版本
+## 当前版本
 
 Ver 0.0.1 : 基本功能测试阶段。
 
