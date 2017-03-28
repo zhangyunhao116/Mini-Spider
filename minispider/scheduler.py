@@ -7,14 +7,16 @@ import json
 
 from ssl import _create_unverified_context
 from .sql import MiniSpiderSQL
+from .extractor import Extractor
+
 
 class MiniSpider:
     def __init__(self, original_url=None, timeout=2, search=(), ssl_context=None, url_check=False,
                  similarity_threshold=0.6,
                  display_number=20):
         # Parse chinese to ascii and delete parameters.
-        if original_url:
-            self.url = original_url
+        self.url = original_url
+        if self.url:
             self.url_check = url_check
             self._check_url()
             self.host = 'http://' + original_url.split('//')[1].split('/')[0]
@@ -32,8 +34,10 @@ class MiniSpider:
         self.display_number = display_number
         self.result = []
 
-    def _url_read(self):
-        req = urllib.request.Request(self.url)
+    def _url_read(self, url=None):
+        if url is None:
+            url = self.url
+        req = urllib.request.Request(url)
         with urllib.request.urlopen(req, context=self.ssl_context, timeout=self.timeout) as r:
             temp = r.read()
             temp = self._content_decode(temp)
@@ -237,9 +241,15 @@ class MiniSpider:
         # Split same block.
         header = same_block.split('//')[0] + '//'
         latter_part = same_block.split('//')[1]
+
+        # If only one item,delete suffix name.
+        if len(same_block) == len(specific_block_list[0]):
+            latter_part = latter_part[0:len(latter_part) - len(self._get_suffix_name(specific_block_list[0])) - 1]
+
         # Split latter part.
         latter_part_list = latter_part.split('/')
         host = latter_part_list[0]
+
         # Make specific pattern.
         last_block = ''
         for index, item in enumerate(latter_part_list):
@@ -287,12 +297,26 @@ class MiniSpider:
 
         return specific_pattern
 
-    def start(self):
-        if self.url is None:
-            # If url is not provided, use SQL data.
-            url = MiniSpiderSQL().pop_url()
-        else:
-            url = self.url
+    def start(self, url=None):
+        # 1.Get url.
         if url is None:
+            # If url is not provided, use SQL data.
+            flag, url = MiniSpiderSQL().pop_url()
+        if url is None:
+            # If database can not provide a url, return False.
+            # Add problem info.
             return False
-
+        # 2.Read content.
+        try:
+            content = self._url_read(url)
+            Extractor(content).run_all_extractor()
+        except Exception:
+            pass
+        # 3.Loop.
+        while MiniSpiderSQL()._num_available_url():
+            try:
+                flag, url = MiniSpiderSQL().pop_url()
+                content = self._url_read(url)
+                Extractor(content).run_all_extractor()
+            except Exception:
+                pass

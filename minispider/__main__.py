@@ -22,16 +22,16 @@ def main():
     parser.add_argument('-c', help=choose_help, nargs='+', dest='choose_block', type=int)
 
     timeout_help = 'Set timeout.default = 2'
-    parser.add_argument('-t', help=timeout_help, nargs=1, dest='time_out', type=float)
+    parser.add_argument('-time', help=timeout_help, nargs=1, dest='time_out', type=float)
 
     to_help = 'Choose match data to url_list[u] or resource[r] .default : [u] .'
-    parser.add_argument('-to', help=to_help, nargs=1, dest='to', default='u')
+    parser.add_argument('-to', help=to_help, nargs='?', dest='to', const='u')
 
     name_help = 'Name your extractor.it can be ignored.'
     parser.add_argument('-n', help=name_help, nargs=1, dest='name')
 
     start_help = 'Start.'
-    parser.add_argument('-start', help=start_help, nargs=1, dest='start')
+    parser.add_argument('-start', help=start_help, nargs='?', dest='start', const=True)
 
     # Parse arguments.
     args = parser.parse_args()
@@ -58,6 +58,7 @@ def main():
         else:
             pattern = MiniSpider().choose_block(args.choose_block[0])
         print(pattern)
+        # Choose database.
         if args.to:
             if args.name and args.to[0] == 'u':
                 Extractor().make_extractor(args.name, pattern, mode='url')
@@ -67,6 +68,12 @@ def main():
                 Extractor().make_extractor(pattern=pattern, mode='url')
             elif args.to[0] == 'r':
                 Extractor().make_extractor(pattern=pattern, mode='resource')
+        else:
+            print("Please input  '-to u' or '-to r")
 
+    # Start project.
     if args.start:
-        Extractor().run_all_extractor()
+        if args.start is True:
+            MiniSpider().start()
+        else:
+            MiniSpider().start(args.start)

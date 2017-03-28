@@ -273,6 +273,4 @@ class MiniSpiderSQL(SQL):
 if __name__ == '__main__':
     a = time.time()
     o = MiniSpiderSQL()
-    # o.insert_url(['sadsadasd', 'wqewqewqewq'])
-    # print(o.pop_resource())
     print(time.time() - a)

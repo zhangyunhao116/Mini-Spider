@@ -21,7 +21,7 @@ class Extractor:
         if mode == 'resource':
             self.SQL.insert_resource(result)
         elif mode == 'url':
-            self.SQL.insert_resource(result)
+            self.SQL.insert_url(result)
 
     def make_extractor(self, extractor_name=None, pattern='', mode=''):
         if pattern and mode:
