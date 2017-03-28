@@ -12,14 +12,14 @@ class Extractor:
         self.content = content
         self.SQL = MiniSpiderSQL()
 
-    def run_extractor(self, pattern, mode):
+    def run_extractor(self, pattern, mode, source):
         result = []
         match_list = re.findall(pattern, self.content)
         for i in match_list:
             if self._check_match_url(i):
                 result.append(i)
         if mode == 'resource':
-            self.SQL.insert_resource(result)
+            self.SQL.insert_resource(result,source)
         elif mode == 'url':
             self.SQL.insert_url(result)
 
@@ -44,12 +44,12 @@ class Extractor:
         else:
             return False
 
-    def run_all_extractor(self):
+    def run_all_extractor(self, source=None):
         extractor_list = self._find_all_extractor()
         for name in extractor_list:
             with open(name, mode='r') as f:
                 info = json.loads(f.read())
-                self.run_extractor(info['pattern'], info['mode'])
+                self.run_extractor(info['pattern'], info['mode'],source)
 
     @staticmethod
     def _check_match_url(match_item):

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import sqlite3
-import time
 import os.path
 
 
@@ -49,7 +48,7 @@ class SQL:
         var_key = tuple(var_key)
         var_key_str = str(var_key).replace("'", '')
         var_values = tuple(var_values)
-        var_values_str = str(var_values).replace("u", '')
+        var_values_str = str(var_values)
 
         # Delete ',' if just one item.
         if len(var_key) == 1:
@@ -109,117 +108,41 @@ class MiniSpiderSQL(SQL):
         # Check database file.if not, initialize database.
         if not os.path.isfile(os.getcwd() + os.getcwd()[0] + self.db_name):
             SQL.sql_create_table(self, '%s' % self.url_table_name,
-                                 var_dict={'ID': 'INT PRIMARY KEY NOT NULL', 'URL': 'TEXT', 'STATS': 'INT'})
+                                 var_dict={'ID': 'integer PRIMARY KEY AUTOINCREMENT', 'URL': 'TEXT UNIQUE',
+                                           'STATS': 'INT'})
             SQL.sql_create_table(self, '%s' % self.resource_table_name,
-                                 var_dict={'ID': 'INT PRIMARY KEY NOT NULL', 'URL': 'TEXT', 'STATS': 'INT'})
-            SQL.sql_create_table(self, '%s' % self.set_table_name,
-                                 var_dict={'flag': 'INT PRIMARY KEY', 'url_flag': 'INT', 'resource_flag': 'INT'})
-            self.initialize_flag()
-
-    def initialize_flag(self):
-        SQL.sql_insert(self, self.set_table_name, ['flag', 'url_flag', 'resource_flag'], [0, 0, 0])
-        connect = sqlite3.connect(self.db_name)
-        connect.execute("UPDATE setup SET url_flag = 0 WHERE flag=0")
-        connect.execute("UPDATE setup SET resource_flag = 0 WHERE flag=0")
-        connect.commit()
-        connect.close()
-
-    def read_set(self):
-        return SQL.sql_select(self, self.set_table_name, var_key=['url_flag', 'resource_flag'])
+                                 var_dict={'ID': 'integer PRIMARY KEY AUTOINCREMENT', 'URL': 'TEXT UNIQUE',
+                                           'STATS': 'INT', 'SOURCE': 'INT'})
 
     def insert_url(self, url_list):
-        var_key = ['ID', 'URL', 'STATS']
-
-        flag = self._read_url_flag()
+        var_key = ['URL', 'STATS']
 
         for index, item in enumerate(url_list):
-            SQL.sql_insert(self, self.url_table_name, var_key, [flag + index, item, 1])
+            SQL.sql_insert(self, self.url_table_name, var_key, [item, 1])
 
-        # Update URL flag.
-        self._update_url_flag(flag + len(url_list))
-
-    def insert_resource(self, resource_list):
-        var_key = ['ID', 'URL', 'STATS']
-
-        flag = self._read_resource_flag()
+    def insert_resource(self, resource_list, source=None):
+        var_key = ['URL', 'STATS', 'SOURCE']
 
         for index, item in enumerate(resource_list):
-            SQL.sql_insert(self, self.resource_table_name, var_key, [flag + index, item, 1])
+            SQL.sql_insert(self, self.resource_table_name, var_key, [item, 1, source])
 
-        # Update URL flag.
-        self._update_resource_flag(flag + len(resource_list))
-
-    def _num_available_url(self):
+    def num_available_url(self):
         connect = sqlite3.connect(self.db_name)
 
-        cursor = connect.execute("SELECT COUNT(STATS) FROM %s" % self.url_table_name)
+        cursor = connect.execute("SELECT COUNT(STATS) FROM %s WHERE STATS=1" % self.url_table_name)
         result = cursor.fetchall()[0][0]
 
         connect.close()
         return result
 
-    def _num_available_resource(self):
+    def num_available_resource(self):
         connect = sqlite3.connect(self.db_name)
 
-        cursor = connect.execute("SELECT COUNT(STATS) FROM %s" % self.resource_table_name)
+        cursor = connect.execute("SELECT COUNT(STATS) FROM %s WHERE STATS=1" % self.resource_table_name)
         result = cursor.fetchall()[0][0]
 
         connect.close()
         return result
-
-    def _update_url_flag(self, url_flag):
-        connect = sqlite3.connect(self.db_name)
-
-        sql_text = "UPDATE setup set url_flag = %s where flag=0" % url_flag
-        try:
-            connect.execute(sql_text)
-        except sqlite3.Error:
-            return 0
-
-        connect.commit()
-        connect.close()
-
-    def _update_resource_flag(self, resource_flag):
-        connect = sqlite3.connect(self.db_name)
-
-        sql_text = "UPDATE setup set resource_flag = %s where flag=0" % resource_flag
-        try:
-            connect.execute(sql_text)
-        except sqlite3.Error:
-            return 0
-
-        connect.commit()
-        connect.close()
-
-    def _read_resource_flag(self):
-        connect = sqlite3.connect(self.db_name)
-
-        sql_text = "SELECT resource_flag from setup WHERE flag = 0"
-        cursor = connect.execute(sql_text)
-        result = cursor.fetchall()[0][0]
-
-        connect.close()
-        return result
-
-    def _read_url_flag(self):
-        connect = sqlite3.connect(self.db_name)
-
-        sql_text = "SELECT url_flag from setup WHERE flag = 0"
-        cursor = connect.execute(sql_text)
-        result = cursor.fetchall()[0][0]
-
-        connect.close()
-        return result
-
-    def _plus_resource_flag(self):
-        flag = int(self._read_resource_flag())
-        flag += 1
-        self._update_resource_flag(flag)
-
-    def _plus_url_flag(self):
-        flag = int(self._read_url_flag())
-        flag += 1
-        self._update_url_flag(flag)
 
     def pop_url(self):
         connect = sqlite3.connect(self.db_name)
@@ -269,8 +192,28 @@ class MiniSpiderSQL(SQL):
         connect.commit()
         connect.close()
 
+    def num_all_url(self):
+        connect = sqlite3.connect(self.db_name)
+
+        cursor = connect.execute("SELECT COUNT(ID) FROM %s" % self.url_table_name)
+        result = cursor.fetchall()[0][0]
+
+        connect.close()
+        return result
+
+    def num_all_resource(self):
+        connect = sqlite3.connect(self.db_name)
+
+        cursor = connect.execute("SELECT COUNT(ID) FROM %s" % self.resource_table_name)
+        result = cursor.fetchall()[0][0]
+
+        connect.close()
+        return result
+
+    def display_all(self):
+        s = 'url: %s/%s||resource: %s/%s' % (
+            self.num_available_url(), self.num_all_url(), self.num_available_resource(), self.num_all_resource())
+        print(s)
 
 if __name__ == '__main__':
-    a = time.time()
-    o = MiniSpiderSQL()
-    print(time.time() - a)
+    pass

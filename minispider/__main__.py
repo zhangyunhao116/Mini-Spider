@@ -50,6 +50,7 @@ def main():
 
     # Choose block make regular expression.
     if args.choose_block:
+
         length = len(args.choose_block)
         if length == 3:
             pattern = MiniSpider().choose_block(args.choose_block[0], args.choose_block[1], args.choose_block[2])
@@ -69,7 +70,7 @@ def main():
             elif args.to[0] == 'r':
                 Extractor().make_extractor(pattern=pattern, mode='resource')
         else:
-            print("Please input  '-to u' or '-to r")
+            print("WARNING:Please input  '-to u' or '-to r")
 
     # Start project.
     if args.start:

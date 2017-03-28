@@ -57,7 +57,7 @@ $ pip install mini-spider
 
 ## 使用
 
-##### **1.首先你需要分析一个网站，并输入你想提取的内容（包含下一个网站的地址和你需要的资源），如**
+#### **1.首先你需要分析一个网站，并输入你想提取的内容（包含下一个网站的地址和你需要的资源），如**
 
 ```
 $ mini-spider -a http://www.fengniao.com jpg html
@@ -69,7 +69,7 @@ $ mini-spider -a http://www.fengniao.com jpg html
 
 然后mini-spider会输出所有可以匹配的资源并打印到终端。
 
-##### **2.查看相应的匹配项，创建你所需要的提取器。如**
+#### **2.查看相应的匹配项，创建你所需要的提取器。如**
 
 ```console
 $ mini-spider -c 0 1 3 -to u
@@ -87,7 +87,7 @@ $ mini-spider -c 0 1 3 -to u
 
 仅在 ***-c*** 命令出现时使用，作用为选择该提取器输出内容是属于什么内容。mini-spider仅提供两种选项，即u(URL,网址)和r(resource,资源)
 
-##### **3.启动爬虫，爬取相应的网址和资源。**
+#### **3.启动爬虫，爬取相应的网址和资源。**
 
 ```console
 $ mini-spider -start http://www.fengniao.com
@@ -99,7 +99,7 @@ $ mini-spider -start http://www.fengniao.com
 
 其可以不指定参数，此时如果在数据库中没有url可以提供，爬虫将不会运行。
 
-##### **4.下载数据库中相应的资源。**
+#### **4.下载数据库中相应的资源。**
 
 ```console
 $ mini-spider -download

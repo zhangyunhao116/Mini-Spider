@@ -13,7 +13,7 @@ from .extractor import Extractor
 class MiniSpider:
     def __init__(self, original_url=None, timeout=2, search=(), ssl_context=None, url_check=False,
                  similarity_threshold=0.6,
-                 display_number=20):
+                 display_number=100):
         # Parse chinese to ascii and delete parameters.
         self.url = original_url
         if self.url:
@@ -280,20 +280,16 @@ class MiniSpider:
 
         return result_pattern
 
-    def choose_block(self, num, start=0, end=None):
+    def choose_block(self, num, start=None, end=None):
+        # Choose block to make specific pattern. +1 used fix python array problem.
         block = self._read_temp()[num]
-        if end is None:
-            end = len(block)
-        elif start != end:
-            # Fix python list do not include end.
-            end += 1
 
-        if start == end:
-            # Use one item make specific pattern.
+        if start and end:
+            specific_pattern = self.make_specific_pattern(block[start:end + 1])
+        elif start:
             specific_pattern = self.make_specific_pattern(block[start:start + 1])
         else:
-            # Use list make specific pattern.
-            specific_pattern = self.make_specific_pattern(block[start:end])
+            specific_pattern = self.make_specific_pattern(block[0:])
 
         return specific_pattern
 
@@ -301,22 +297,27 @@ class MiniSpider:
         # 1.Get url.
         if url is None:
             # If url is not provided, use SQL data.
-            flag, url = MiniSpiderSQL().pop_url()
-        if url is None:
-            # If database can not provide a url, return False.
-            # Add problem info.
-            return False
+            try:
+                flag, url = MiniSpiderSQL().pop_url()
+            except TypeError:
+                raise Exception('Please input original url!')
+
         # 2.Read content.
         try:
             content = self._url_read(url)
-            Extractor(content).run_all_extractor()
-        except Exception:
-            pass
+            Extractor(content).run_all_extractor(0)
+        except Exception as e:
+            print(e)
+        MiniSpiderSQL().display_all()
+
         # 3.Loop.
-        while MiniSpiderSQL()._num_available_url():
+        while MiniSpiderSQL().num_available_url():
+            flag, url = MiniSpiderSQL().pop_url()
+
             try:
-                flag, url = MiniSpiderSQL().pop_url()
                 content = self._url_read(url)
-                Extractor(content).run_all_extractor()
-            except Exception:
-                pass
+                Extractor(content).run_all_extractor(flag)
+            except Exception as e:
+                print(e)
+
+            MiniSpiderSQL().display_all()
