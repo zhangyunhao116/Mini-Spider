@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sqlite3
+import os
 import os.path
 
 
@@ -98,15 +99,18 @@ class SQL:
 
 
 class MiniSpiderSQL(SQL):
-    def __init__(self):
+    def __init__(self, force_check=False):
         # Self.db_name = 'MiniSpider.db'.
-        SQL.__init__(self, db_name='MiniSpider.db')
+        SQL.__init__(self, db_name=os.path.join(os.getcwd(), 'MiniSpider.db'))
         self.url_table_name = 'url_list'
         self.resource_table_name = 'resource'
         self.set_table_name = 'setup'
-
+        # Force check.
+        if force_check:
+            if not os.path.isfile(os.path.join(os.getcwd(), self.db_name)):
+                raise RuntimeError('Can not find database!')
         # Check database file.if not, initialize database.
-        if not os.path.isfile(os.getcwd() + os.getcwd()[0] + self.db_name):
+        if not os.path.isfile(os.path.join(os.getcwd(), self.db_name)):
             SQL.sql_create_table(self, '%s' % self.url_table_name,
                                  var_dict={'ID': 'integer PRIMARY KEY AUTOINCREMENT', 'URL': 'TEXT UNIQUE',
                                            'STATS': 'INT'})
@@ -161,7 +165,7 @@ class MiniSpiderSQL(SQL):
     def pop_resource(self):
         connect = sqlite3.connect(self.db_name)
 
-        sql_text = "SELECT ID,URL from %s WHERE STATS=1" % self.resource_table_name
+        sql_text = "SELECT ID,URL,SOURCE from %s WHERE STATS=1" % self.resource_table_name
         cursor = connect.execute(sql_text)
 
         result = cursor.fetchone()
@@ -215,5 +219,7 @@ class MiniSpiderSQL(SQL):
             self.num_available_url(), self.num_all_url(), self.num_available_resource(), self.num_all_resource())
         print(s)
 
+
 if __name__ == '__main__':
-    pass
+    for i in range(100):
+        MiniSpiderSQL().update_resource_stats(i, 1)

@@ -37,11 +37,10 @@ class MiniSpider:
     def _url_read(self, url=None):
         if url is None:
             url = self.url
+
         req = urllib.request.Request(url)
         with urllib.request.urlopen(req, context=self.ssl_context, timeout=self.timeout) as r:
-            temp = r.read()
-            temp = self._content_decode(temp)
-            return temp
+            return self._content_decode(r.read())
 
     def _check_url(self):
         if self.url_check:

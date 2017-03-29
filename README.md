@@ -1,4 +1,6 @@
 # Mini-Spider
+[![PyPI](https://img.shields.io/pypi/v/yagmail.svg?style=flat-square)](https://pypi.python.org/pypi/mini-spider/)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](https://pypi.python.org/pypi/mini-spider/)
 mini-spider是一个简单、易用的爬虫工具，它可以帮助你迅速的爬取你想要提取的内容，而不需要关注诸如正则表达式、网络环境、下载器等一系列烦人的事情。
 
 使用mini-spider，你仅需要四步即可创建属于你自己的爬虫！（大部分时候）
@@ -30,15 +32,17 @@ $ mini-spider -a http://www.fengniao.com jpg html
 $ mini-spider -c 1 -to r
 $ mini-spider -c 3 -to u
 $ mini-spider -start
-(wait)
-$ mini-spider -download
+url: 19/19||resource: 9/9
+...
+url: 0/19||resource: 289/289
+$ mini-spider -download /User/zyh/test
 ```
 
 ## 安装
 
 安装前注意：
 
-- 本项目仅支持python3.x
+- 只依赖于python 3.x ，不兼容pyhon 2.x
 
 
 - 本项目不需要任何第三方依赖。
@@ -49,7 +53,7 @@ $ mini-spider -download
 $ python3 setup.py install
 ```
 
-或者，在测试版本发布后，运行（现在不可使用）
+或者，使用pip下载
 
 ```console
 $ pip install mini-spider
@@ -102,14 +106,16 @@ $ mini-spider -start http://www.fengniao.com
 #### **4.下载数据库中相应的资源。**
 
 ```console
-$ mini-spider -download
+$ mini-spider -download /User/zyh/test
 ```
 
 ***-download*** 命令:
 
-启动下载器下载所需要的内容。
+启动下载器下载所需要的内容。可选参数为下载的绝对路径，如果未指定使用当前终端所在目录。
+
+- 每个来自不同URL的提取资源会自动存放在目录中不同的文件夹
+- 下载器有断点续传功能，文件未下载成功，重新运行本命令即可
 
 ## 当前版本
 
 Ver 0.0.1 : 基本功能测试阶段。
-

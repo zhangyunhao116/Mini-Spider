@@ -2,7 +2,6 @@
 import json
 import re
 import os
-import sys
 
 from .sql import MiniSpiderSQL
 
@@ -19,7 +18,7 @@ class Extractor:
             if self._check_match_url(i):
                 result.append(i)
         if mode == 'resource':
-            self.SQL.insert_resource(result,source)
+            self.SQL.insert_resource(result, source)
         elif mode == 'url':
             self.SQL.insert_url(result)
 
@@ -49,7 +48,7 @@ class Extractor:
         for name in extractor_list:
             with open(name, mode='r') as f:
                 info = json.loads(f.read())
-                self.run_extractor(info['pattern'], info['mode'],source)
+                self.run_extractor(info['pattern'], info['mode'], source)
 
     @staticmethod
     def _check_match_url(match_item):
@@ -61,8 +60,7 @@ class Extractor:
 
     @staticmethod
     def _find_all_extractor():
-        file_list = os.listdir(sys.path[0])
-
+        file_list = os.listdir(os.getcwd())
         extractor_list = []
         for i in file_list:
             try:

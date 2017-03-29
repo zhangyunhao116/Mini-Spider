@@ -9,6 +9,7 @@ import urllib.parse
 import urllib.request
 
 from ssl import _create_unverified_context
+from .sql import MiniSpiderSQL
 
 
 class Downloader:
@@ -44,7 +45,7 @@ class Downloader:
         self.ftp_password = ftp_password
         # Initialization parameters.
         self.filename = filename
-        self.log_filename = self.work_path + self.filename + '._temp_log'
+        self.log_filename = os.path.join(self.work_path, self.filename) + '._temp_log'
         self.block_size = int(block_size)
         self.block_list = []
         self.timeout = timeout
@@ -136,11 +137,11 @@ class Downloader:
             # Simple way.
             self._now_time = time.time()
             ftp = urllib.request.URLopener()
-            ftp.retrieve(url, self.work_path + self.filename, reporthook=self._ftp_progress)
+            ftp.retrieve(url, os.path.join(self.work_path, self.filename), reporthook=self._ftp_progress)
         else:
             # If ftp serve need user and password.
             with ftplib.FTP(host=ip, user=self.ftp_user, passwd=self.ftp_password) as ftp:
-                with open(self.work_path + self.filename, mode='ab+', buffering=self.block_size) as f:
+                with open(os.path.join(self.work_path, self.filename), mode='ab+', buffering=self.block_size) as f:
                     ftp.login()
                     ftp.cwd('%s' % directory)
                     ftp.retrbinary('RETR %s' % filename, f.write, blocksize=self.block_size)
@@ -238,7 +239,7 @@ class Downloader:
         byte_range = 'bytes=' + str(begin) + '-' + str(end - 1)
         req.add_header('Range', byte_range)
         with urllib.request.urlopen(req, context=self.ssl_context, timeout=self.timeout) as r:
-            with open(self.work_path + self.filename, mode='ab+', buffering=self.block_size) as f:
+            with open(os.path.join(self.work_path, self.filename), mode='ab+', buffering=self.block_size) as f:
                 f.seek(self.content_length_now)
                 f.truncate()
                 f.write(r.read())
@@ -256,7 +257,7 @@ class Downloader:
 
     def _check_file(self):
         try:
-            file_size = os.path.getsize(self.work_path + self.filename)
+            file_size = os.path.getsize(os.path.join(self.work_path, self.filename))
             if file_size == self.content_length_size:
                 return True
             else:
@@ -285,16 +286,27 @@ class Downloader:
         self.url = urllib.parse.quote(self.url, safe='/:?=@&[]')
 
 
+class MiniSpiderDownloader():
+    def __init__(self):
+        self.SQL = MiniSpiderSQL()
+        self.work_path = os.getcwd()
+
+    def start(self, work_path=None):
+        # If work path provided, use it.
+        if work_path is not None:
+            self.work_path = work_path
+
+        while self.SQL.num_available_resource():
+            # Pop resource from database.
+            id, url, source = self.SQL.pop_resource()
+
+            # Download.
+            try:
+                Downloader(url, work_path=os.path.join(self.work_path, str(source))).download()
+            except Exception as e:
+                print(e)
+                self.SQL.update_resource_stats(url_id=id, stats=1)
+
+
 if __name__ == "__main__":
-    url = 'http://www.dy2018.com/i/96869.html'
-    url = 'http://www.cau.edu.cn/picture/0/1612102242504268107.jpg'
-    # url = 'http://tug.org/cgi-bin/mactex-download/MacTeX.pkg'
-    # url = 'https://download.jetbrains.8686c.com/idea/ideaIU-2016.3.2.dmg'
-    # url = 'ftp://ftp.cau.edu.cn/Upload/FOR_MAC/Programming/RStudio-0.98.1091.dmg'
-    # url = 'ftp://8:8@xia.dl1234.com:8807/[电影天堂www.dy2018.com]美国队长3DVD中英双字.rmvb'
-    url = 'http://bbs.qn.img-space.com/g1/M00/04/CC/Cg-4rFYpzKeIdRrfABT6FyBFiNgAAM9QwNqvW8AFPov052.jpg?imageView2/2/w/1024/q/90/ignore-error/1/'
-    url = 'http://news.cau.edu.cn/art/2017/3/3/art_8769_502290.html'
-    a = Downloader(url,
-                   work_path='/Users/zyh/github/Mini-Spider/test'
-                   )
-    a.download()
+    pass

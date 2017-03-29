@@ -3,6 +3,7 @@ import argparse
 
 from .scheduler import MiniSpider
 from .extractor import Extractor
+from .downloader import MiniSpiderDownloader
 
 
 def main():
@@ -33,13 +34,17 @@ def main():
     start_help = 'Start.'
     parser.add_argument('-start', help=start_help, nargs='?', dest='start', const=True)
 
+    download_help = 'Download all url from database.'
+    parser.add_argument('-download', help=download_help, nargs='?', dest='download', const=True)
+
     # Parse arguments.
     args = parser.parse_args()
 
     # Parse analysis url.
     if args.analysis_url:
-        if not args.analysis_url[1]:
-            print('WARNING: Please input what resource you are looking for!')
+        if len(args.analysis_url) == 1:
+            print('Error: Please input what resource you are looking for!')
+            return False
         if args.similarity:
             spider = MiniSpider(args.analysis_url[0], search=args.analysis_url[1:],
                                 similarity_threshold=args.similarity[0])
@@ -69,8 +74,10 @@ def main():
                 Extractor().make_extractor(pattern=pattern, mode='url')
             elif args.to[0] == 'r':
                 Extractor().make_extractor(pattern=pattern, mode='resource')
+            print('The extractor was created successfully！')
         else:
-            print("WARNING:Please input  '-to u' or '-to r")
+            print("Error: Please input  '-to u' or '-to r")
+            return False
 
     # Start project.
     if args.start:
@@ -78,3 +85,14 @@ def main():
             MiniSpider().start()
         else:
             MiniSpider().start(args.start)
+
+    # Start downloading.
+    if args.download:
+        if args.download is True:
+            MiniSpiderDownloader().start()
+        else:
+            MiniSpiderDownloader().start(args.download)
+
+
+if __name__ == '__main__':
+    main()
