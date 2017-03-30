@@ -33,6 +33,7 @@ class MiniSpider:
         self.search_list = self._initialize_search(search)
         self.display_number = display_number
         self.result = []
+        self.http_flag = 0
 
     def _url_read(self, url=None):
         if url is None:
@@ -51,6 +52,7 @@ class MiniSpider:
         self.url = urllib.parse.quote(self.url, safe='/:?=@&[]')
 
     def _handle_match(self, match_list):
+        """ Handle match list by similarity threshold and add it to result."""
         # If match_list = [], return False.
         if len(match_list) == 0:
             return False
@@ -90,18 +92,26 @@ class MiniSpider:
                         print('%s is not displayed' % (len(item) - self.display_number))
                         flag = 0
                     continue
+                # Print href url.
+                if index >= self.http_flag:
+                    j = self.host + j
                 print('---(%s)%s' % (i, j))
 
-    def _pattern_make(self):
+    def _pattern_make_http(self):
         for i in self.search_list:
             temp = "http://.+?\." + i
+            self.pattern_list.append(temp)
+
+    def _pattern_make_href(self):
+        for i in self.search_list:
+            temp = 'href="(/.+?\.%s)"' % i
             self.pattern_list.append(temp)
 
     @staticmethod
     def similar(str1, str2):
         if str1 == str2:
             return 1
-        return difflib.SequenceMatcher(None, str1, str2).quick_ratio()
+        return float(difflib.SequenceMatcher(None, str1, str2).ratio())
 
     @staticmethod
     def _check_match_url(match_item):
@@ -148,8 +158,19 @@ class MiniSpider:
 
     @staticmethod
     def _find_longest_match(str1, str2):
-        o = difflib.SequenceMatcher(isjunk=None, a=str1, b=str2)
-        return o.find_longest_match(0, len(str1), 0, len(str2))[2]
+        len_1 = len(str1)
+        len_2 = len(str2)
+
+        if len_1 >= len_2:
+            length = len_2
+        else:
+            length = len_1
+
+        for i in range(0, length):
+            if str1[i] == str2[i]:
+                continue
+            else:
+                return i
 
     @staticmethod
     def _is_letter(match_str):
@@ -202,9 +223,10 @@ class MiniSpider:
     def analysis_url(self):
         # Read URL content.
         content = self._url_read()
-        # Make pattern.
-        self._pattern_make()
 
+        # Make http pattern.
+        self._pattern_make_http()
+        # Match http pattern.
         match_list = []
         for i in self.pattern_list:
             match = re.findall(i, content)
@@ -214,19 +236,42 @@ class MiniSpider:
             # Classify the url into certain types.
             self._handle_match(match_list)
             match_list = []
+        # Get length of http pattern match list. First item is href item.
+        self.http_flag = len(self.result)
+
+        # Delete http pattern.
+        self.pattern_list = []
+        # Make href pattern.
+        self._pattern_make_href()
+        # Match href pattern.
+        match_list = []
+        for i in self.pattern_list:
+            match = re.findall(i, content)
+            for j in match:
+                if self._check_match_url(j):
+                    match_list.append(j)
+            # Classify the url into certain types.
+            self._handle_match(match_list)
+            match_list = []
+
         # Check if not match.
         if not self.result:
             # Do some thing.
             print('Error!We find nothing!')
             return False
 
-        # Save result in temp file.
-        self._save_temp(self.result)
+        # Save result、http_flag、host in temp file.
+        temp = {
+            'result': self.result,
+            'http_flag': self.http_flag,
+            'host': self.host
+        }
+        self._save_temp(temp)
 
         # Print result.
         self._display_result()
 
-    def make_specific_pattern(self, specific_block_list):
+    def make_specific_http_pattern(self, specific_block_list):
         """Make specific pattern for entire URL."""
         # Get longest match block.
         same_size = self.find_longest_size(specific_block_list)
@@ -279,16 +324,69 @@ class MiniSpider:
 
         return result_pattern
 
+    def make_specific_href_pattern(self, specific_block_list, host):
+        """Make specific pattern for href URL."""
+        # Get longest match block.
+        same_size = self.find_longest_size(specific_block_list)
+
+        # Get same_block and it's length.
+        same_block = specific_block_list[0][0:same_size]
+        same_length = len(same_block)
+
+        # Get suffix name and add regular expression format.
+        suffix_name = '\.' + self._get_suffix_name(specific_block_list[0])
+
+        # If only one item,delete suffix name.
+        if same_length == len(specific_block_list[0]):
+            same_block = same_block[0:same_length - len(self._get_suffix_name(specific_block_list[0])) - 1]
+
+        # Make specific pattern.
+        main_block = ''
+        temp_block = ''
+        for index, item in enumerate(same_block):
+            temp = []
+            if self._is_letter(item):
+                temp.append('[a-z]')
+            elif self._is_letter_capital(item):
+                temp.append('[A-Z]')
+            elif self._is_number(item):
+                temp.append('[0-9]')
+            else:
+                temp.append(item)
+            main_block = main_block + temp_block.join(temp)
+
+        # Check if need supplement.
+        if same_length == len(specific_block_list[0]):
+            char_supplement = ''
+        else:
+            char_supplement = r'.+?'
+
+        pattern = '''href="(''' + main_block + char_supplement + suffix_name + ''')"'''
+
+        return pattern, host
+
     def choose_block(self, num, start=None, end=None):
         # Choose block to make specific pattern. +1 used fix python array problem.
-        block = self._read_temp()[num]
+        block = self._read_temp()['result'][num]
+        http_flag = self._read_temp()['http_flag']
+        host = self._read_temp()['host']
 
-        if start and end:
-            specific_pattern = self.make_specific_pattern(block[start:end + 1])
-        elif start:
-            specific_pattern = self.make_specific_pattern(block[start:start + 1])
+        # Make href pattern.
+        if num >= http_flag:
+            if start is not None and end is not None:
+                specific_pattern = self.make_specific_href_pattern(block[start:end + 1], host)
+            elif start is not None:
+                specific_pattern = self.make_specific_href_pattern(block[start:start + 1], host)
+            else:
+                specific_pattern = self.make_specific_href_pattern(block[0:], host)
+        # Make http pattern.
         else:
-            specific_pattern = self.make_specific_pattern(block[0:])
+            if start is not None and end is not None:
+                specific_pattern = self.make_specific_http_pattern(block[start:end + 1])
+            elif start is not None:
+                specific_pattern = self.make_specific_http_pattern(block[start:start + 1])
+            else:
+                specific_pattern = self.make_specific_http_pattern(block[0:])
 
         return specific_pattern
 

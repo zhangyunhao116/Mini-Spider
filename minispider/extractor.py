@@ -11,11 +11,14 @@ class Extractor:
         self.content = content
         self.SQL = MiniSpiderSQL()
 
-    def run_extractor(self, pattern, mode, source):
+    def run_extractor(self, pattern, mode, source, host=None):
         result = []
         match_list = re.findall(pattern, self.content)
         for i in match_list:
             if self._check_match_url(i):
+                # If it is a href,add host.
+                if host:
+                    i = host + i
                 result.append(i)
         if mode == 'resource':
             self.SQL.insert_resource(result, source)
@@ -24,11 +27,23 @@ class Extractor:
 
     def make_extractor(self, extractor_name=None, pattern='', mode=''):
         if pattern and mode:
+            host = None
+            # If extract href url.
+            if len(pattern) == 2:
+                host = pattern[1]
+                pattern = pattern[0]
             # Make json data.
-            info = {
-                'pattern': pattern,
-                'mode': mode
-            }
+            if host:
+                info = {
+                    'pattern': pattern,
+                    'mode': mode,
+                    'host': host
+                }
+            else:
+                info = {
+                    'pattern': pattern,
+                    'mode': mode
+                }
             s = json.dumps(info)
             # If name is None, make a name.
             if extractor_name is None:
@@ -37,6 +52,9 @@ class Extractor:
                     extractor_name = str(i) + '.extractor'
                     if extractor_name not in extractor_list:
                         break
+            else:
+                # Add suffix name.
+                extractor_name = extractor_name + '.extractor'
             # Save extractor.
             with open(extractor_name, mode='w') as f:
                 f.write(s)
@@ -48,7 +66,11 @@ class Extractor:
         for name in extractor_list:
             with open(name, mode='r') as f:
                 info = json.loads(f.read())
-                self.run_extractor(info['pattern'], info['mode'], source)
+                # Check href extractor.
+                if len(info) == 3:
+                    self.run_extractor(info['pattern'], info['mode'], source, info['host'])
+                else:
+                    self.run_extractor(info['pattern'], info['mode'], source)
 
     @staticmethod
     def _check_match_url(match_item):

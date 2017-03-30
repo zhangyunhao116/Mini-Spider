@@ -37,6 +37,9 @@ def main():
     download_help = 'Download all url from database.'
     parser.add_argument('-download', help=download_help, nargs='?', dest='download', const=True)
 
+    make_help = 'Make extractor from user.'
+    parser.add_argument('-m', help=make_help, nargs='+', dest='make')
+
     # Parse arguments.
     args = parser.parse_args()
 
@@ -55,28 +58,59 @@ def main():
 
     # Choose block make regular expression.
     if args.choose_block:
+        num = args.choose_block[0]
+        start = None
+        end = None
 
-        length = len(args.choose_block)
-        if length == 3:
-            pattern = MiniSpider().choose_block(args.choose_block[0], args.choose_block[1], args.choose_block[2])
-        elif length == 2:
-            pattern = MiniSpider().choose_block(args.choose_block[0], args.choose_block[1])
+        if len(args.choose_block) == 2:
+            start = args.choose_block[1]
+        elif len(args.choose_block) == 3:
+            start = args.choose_block[1]
+            end = args.choose_block[2]
+
+        pattern = MiniSpider().choose_block(num, start, end)
+
+        # Print pattern.
+        if len(pattern) == 2:
+            print('Host:' + pattern[1])
+            print(pattern[0])
         else:
-            pattern = MiniSpider().choose_block(args.choose_block[0])
-        print(pattern)
+            print(pattern)
+
         # Choose database.
         if args.to:
-            if args.name and args.to[0] == 'u':
-                Extractor().make_extractor(args.name, pattern, mode='url')
-            elif args.name and args.to[0] == 'r':
-                Extractor().make_extractor(args.name, pattern, mode='resource')
-            elif args.to[0] == 'u':
-                Extractor().make_extractor(pattern=pattern, mode='url')
+            name = None
+            if args.name:
+                name = args.name[0]
+            if args.to[0] == 'u':
+                Extractor().make_extractor(name, pattern=pattern, mode='url')
             elif args.to[0] == 'r':
-                Extractor().make_extractor(pattern=pattern, mode='resource')
+                Extractor().make_extractor(name, pattern=pattern, mode='resource')
             print('The extractor was created successfully！')
         else:
-            print("Error: Please input  '-to u' or '-to r")
+            print("Error: Please input  '-to u' or '-to r'")
+            return False
+
+    # Make pattern by user.
+    if args.make:
+        pattern_user = args.make[0]
+
+        # Get host, if possible.
+        if len(args.make) == 2:
+            pattern_user = pattern_user, args.make[1]
+
+        # Choose database.
+        if args.to:
+            name = None
+            if args.name:
+                name = args.name[0]
+            if args.to[0] == 'u':
+                Extractor().make_extractor(name, pattern=pattern_user, mode='url')
+            elif args.to[0] == 'r':
+                Extractor().make_extractor(name, pattern=pattern_user, mode='resource')
+            print('The extractor was created successfully！')
+        else:
+            print("Error: Please input  '-to u' or '-to r'")
             return False
 
     # Start project.
