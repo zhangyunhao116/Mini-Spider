@@ -406,6 +406,7 @@ class MiniSpider:
                 content = self._url_read(url)
                 Extractor(content).run_all_extractor(flag)
             except Exception as e:
+                MiniSpiderSQL().update_url_stats(flag,1)
                 print(e)
 
             MiniSpiderSQL().display_all()
