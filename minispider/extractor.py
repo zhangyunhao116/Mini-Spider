@@ -15,11 +15,10 @@ class Extractor:
         result = []
         match_list = re.findall(pattern, self.content)
         for i in match_list:
-            if self._check_match_url(i):
-                # If it is a href,add host.
-                if host:
-                    i = host + i
-                result.append(i)
+            # If it is a href,add host.
+            if host:
+                i = host + i
+            result.append(i)
         if mode == 'resource':
             self.SQL.insert_resource(result, source)
         elif mode == 'url':
@@ -71,14 +70,6 @@ class Extractor:
                     self.run_extractor(info['pattern'], info['mode'], source, info['host'])
                 else:
                     self.run_extractor(info['pattern'], info['mode'], source)
-
-    @staticmethod
-    def _check_match_url(match_item):
-        # Delete the url containing blank.
-        temp = match_item.replace(' ', '')
-        if len(temp) < len(match_item):
-            return False
-        return True
 
     @staticmethod
     def _find_all_extractor():

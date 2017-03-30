@@ -99,12 +99,12 @@ class MiniSpider:
 
     def _pattern_make_http(self):
         for i in self.search_list:
-            temp = "http://.+?\." + i
+            temp = "http://\S+?\." + i
             self.pattern_list.append(temp)
 
     def _pattern_make_href(self):
         for i in self.search_list:
-            temp = 'href="(/.+?\.%s)"' % i
+            temp = 'href="(/\S+?\.%s)"' % i
             self.pattern_list.append(temp)
 
     @staticmethod
@@ -112,14 +112,6 @@ class MiniSpider:
         if str1 == str2:
             return 1
         return float(difflib.SequenceMatcher(None, str1, str2).ratio())
-
-    @staticmethod
-    def _check_match_url(match_item):
-        # Delete the url containing blank.
-        temp = match_item.replace(' ', '')
-        if len(temp) < len(match_item):
-            return False
-        return True
 
     @staticmethod
     def _content_decode(content):
@@ -231,8 +223,7 @@ class MiniSpider:
         for i in self.pattern_list:
             match = re.findall(i, content)
             for j in match:
-                if self._check_match_url(j):
-                    match_list.append(j)
+                match_list.append(j)
             # Classify the url into certain types.
             self._handle_match(match_list)
             match_list = []
@@ -241,6 +232,7 @@ class MiniSpider:
 
         # Delete http pattern.
         self.pattern_list = []
+
         # Make href pattern.
         self._pattern_make_href()
         # Match href pattern.
@@ -248,8 +240,7 @@ class MiniSpider:
         for i in self.pattern_list:
             match = re.findall(i, content)
             for j in match:
-                if self._check_match_url(j):
-                    match_list.append(j)
+                match_list.append(j)
             # Classify the url into certain types.
             self._handle_match(match_list)
             match_list = []
@@ -318,7 +309,7 @@ class MiniSpider:
         if len(same_block) == len(specific_block_list[0]):
             char_supplement = ''
         else:
-            char_supplement = '.+?'
+            char_supplement = '\S+?'
 
         result_pattern = header + host + last_block + char_supplement + suffix_name
 
@@ -359,7 +350,7 @@ class MiniSpider:
         if same_length == len(specific_block_list[0]):
             char_supplement = ''
         else:
-            char_supplement = r'.+?'
+            char_supplement = '\S+?'
 
         pattern = '''href="(''' + main_block + char_supplement + suffix_name + ''')"'''
 
