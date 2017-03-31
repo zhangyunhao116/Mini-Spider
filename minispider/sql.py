@@ -219,7 +219,56 @@ class MiniSpiderSQL(SQL):
             self.num_available_url(), self.num_all_url(), self.num_available_resource(), self.num_all_resource())
         print(s)
 
+    def export_txt(self, file_name, table_name):
+        connect = sqlite3.connect(self.db_name)
+
+        sql_text = "SELECT URL from %s" % table_name
+        cursor = connect.execute(sql_text)
+
+        result = cursor.fetchall()
+
+        connect.close()
+
+        # Add '\n'.
+        result = list(map(lambda x: x[0] + '\n', result))
+
+        with open(os.path.join(os.getcwd(), file_name), mode='w') as f:
+            f.writelines(result)
+
+    def import_txt(self, file_name, table_name):
+        with open(os.path.join(os.getcwd(), file_name), mode='r') as f:
+            result = f.readlines()
+
+        result = list(map(lambda x: x[:-1], result))
+        if table_name == 'url_list':
+            self.insert_url(result)
+        elif table_name == 'resource':
+            self.insert_resource(result, 'user')
+
+    def list_url(self, table_name, num):
+        connect = sqlite3.connect(self.db_name)
+
+        sql_text = "SELECT URL from %s" % table_name
+        cursor = connect.execute(sql_text)
+
+        result = cursor.fetchall()
+
+        connect.close()
+
+        result = list(map(lambda x: x[0], result))
+
+        for index, item in enumerate(result):
+            if index < num:
+                print(item)
+
+    def reset(self, table_name):
+        if table_name == 'u':
+            for i in range(1, self.num_all_url() + 1):
+                self.update_url_stats(i, 1)
+        elif table_name == 'r':
+            for i in range(1, self.num_all_resource() + 1):
+                self.update_resource_stats(i, 1)
+
 
 if __name__ == '__main__':
-    for i in range(100):
-        MiniSpiderSQL().update_resource_stats(i, 1)
+    MiniSpiderSQL().import_txt('1.txt', 'resource')

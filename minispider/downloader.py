@@ -15,7 +15,7 @@ from .sql import MiniSpiderSQL
 class Downloader:
     """This class is used to handle the Download requests that arrive at the server."""
 
-    def __init__(self, original_url='', filename='', work_path='', block_size=1024 * 1024, headers={}, timeout=2,
+    def __init__(self, original_url='', filename='', work_path='', block_size=1024 * 1024, headers={}, timeout=2.0,
                  ssl_context=None,
                  terminal_mode=True, url_check=False, ftp_user='', ftp_password=''):
         # Parse chinese to ascii and delete parameters.
@@ -291,7 +291,7 @@ class MiniSpiderDownloader():
         self.SQL = MiniSpiderSQL()
         self.work_path = os.getcwd()
 
-    def start(self, work_path=None):
+    def start(self, work_path=None, classify=True, timeout=2.0):
         # If work path provided, use it.
         if work_path is not None:
             self.work_path = work_path
@@ -302,7 +302,11 @@ class MiniSpiderDownloader():
 
             # Download.
             try:
-                Downloader(url, work_path=os.path.join(self.work_path, str(source))).download()
+                # Check classify
+                if classify:
+                    Downloader(url, work_path=os.path.join(self.work_path, str(source)), timeout=timeout).download()
+                else:
+                    Downloader(url, work_path=self.work_path, timeout=timeout).download()
             except Exception as e:
                 print(e)
                 self.SQL.update_resource_stats(url_id=id, stats=1)
