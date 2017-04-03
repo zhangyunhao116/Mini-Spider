@@ -6,7 +6,7 @@
   "author_email": "workvl@163.com",
 
   "description": "Simple way to create your spider.",
-  "long_description": "None.",
+  "long_description": "Mini-Spider is a mini-crawler tool,its significance lies in get the resources you need quickly.Instead of focusing on a series of things, such as crawler structure, data storage, network environment, language, etc.Now you just need a few simple commands to get what you need!",
 
   "keywords": "python spider tool package",
   "url": "https://github.com/ZYunH/Mini-Spider",
