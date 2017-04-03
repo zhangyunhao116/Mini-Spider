@@ -1,53 +1,25 @@
 # Mini-Spider
 
 [![PyPI](https://img.shields.io/pypi/v/yagmail.svg?style=flat-square)](https://pypi.python.org/pypi/mini-spider/)
+[![platform](https://img.shields.io/badge/python-3.5-green.svg)]()
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](https://pypi.python.org/pypi/mini-spider/)
 
-mini-spider是一个简单、易用的爬虫工具，它可以帮助你迅速的爬取你想要提取的内容，而不需要关注诸如正则表达式、网络环境、下载器等一系列烦人的事情。
+Mini-Spider是一个实用的爬虫工具，它的意义在于快速获得你所要的资源，而不用去关注诸如爬虫构造、数据存储、网络环境、语言实现等一系列的事情。现在你只需要简单的几个命令，就可以获得你需要的东西！
 
 使用mini-spider，你仅需要四步即可创建属于你自己的爬虫！（大部分时候）
 
-```console
-$ mini-spider -a http://www.fengniao.com jpg html
-[0]:
----(0)http://icon.fengniao.com/index/2016/images/jiaoquan/qrcode-b.jpg
----(1)http://icon.fengniao.com/index/2016/images/jiaoquan/qrcode-bk.jpg
----(2)http://icon.fengniao.com/index/images/qrcode-weixin.jpg
-...
-[1]:
----(0)http://pic.fengniao.com/201703/fn3876hp760400_0323.jpg
-[2]:
----(0)http://2.fengniao.com/price/0-0-0-0-12-0-def-1_1.html
----(1)http://2.fengniao.com/price/0-0-0-0-15-0-def-1_1.html
----(2)http://2.fengniao.com/price/0-0-0-0-2-0-def-1_1.html
----(3)http://2.fengniao.com/price/0-0-0-0-24-0-def-1_1.html
----(4)http://2.fengniao.com/price/0-0-0-0-26-0-def-1_1.html
----(5)http://2.fengniao.com/price/0-0-0-0-3-0-def-1_1.html
-...
-[3]:
----(0)http://qsy.fengniao.com/534/5343356.html
----(1)http://qsy.fengniao.com/534/5343423.html
----(2)http://qsy.fengniao.com/534/5343457.html
----(3)http://sai.fengniao.com/topic/5339077.html
----(4)http://travel.fengniao.com/533/5339985.html
-...
-$ mini-spider -c 1 -to r
-$ mini-spider -c 3 -to u
-$ mini-spider -start
-url: 19/19||resource: 9/9
-...
-url: 0/19||resource: 289/289
-$ mini-spider -download /User/zyh/test
-```
-
 ## 特性
 
-- 网页自动提取资源并根据算法分类（包括完整url和href标签内容）
-- 根据资源自动生成提取器
-- 自动将提取内容加入相应数据库
-- 自动分类下载，断点续传
+- [x] 网页自动提取资源并根据算法分类（包括完整url和href标签内容）
+- [x] 根据资源自动生成提取器
+- [x] 自定义提取器以及Host数据
+- [x] 自动将提取内容加入相应数据库
+- [x] 自动分类下载，断点续传
+- [x] 数据库导入和导出
 
 简单地说，你只需要几个命令就可以爬取你想要的资源！
+
+
 
 ## 安装
 
@@ -70,7 +42,56 @@ $ python3 setup.py install
 $ pip install mini-spider
 ```
 
-## 使用
+
+
+## 如何使用
+
+↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓猛戳↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+
+## [Mini-spider使用教程](http://iamzyh.com/collection/)
+
+
+
+## 快速入门
+
+示例：
+
+```console
+$ mini-spider -a http://bbs.fengniao.com/forum/9373824.html jpg
+[0]:
+---(0)http://bbs.qn.img-space.com/g3/M00/02/3E/Cg-40lggN4GIcjIsAAbtzNgksRcAADfQwP38xwABu3k334.jpg
+---(1)http://bbs.qn.img-space.com/g3/M00/02/3E/Cg-40lggN8KIC5XmAAPNyGCOY3kAADfRAL7-zgAA83g069.jpg
+...
+[1]:
+---(0)http://icon.fengniao.com/forum/images/complain_close.jpg
+---(1)http://icon.fengniao.com/index/2016/images/jiaoquan/qrcode-b.jpg
+...
+[2]:
+---(0)http://image3.fengniao.com/head/1185/80/1184655_0.jpg
+---(1)http://image3.fengniao.com/head/129/80/128323_0.jpg
+...
+$ mini-spider -c 0 -to r
+http://bbs.qn.img-space.com/[a-z][0-9]/[A-Z][0-9][0-9]/[0-9][0-9]/[0-9][A-Z]/[A-Z][a-z]-\S+?\.jpg
+The extractor was created successfully！
+$ mini-spider -c 5 2 -to u
+Host:http://bbs.fengniao.com
+href="(/[a-z][a-z][a-z][a-z][a-z]/[0-9][0-9][0-9][0-9][0-9][0-9][0-9]_[0-9]\.html)"
+The extractor was created successfully！
+$ mini-spider -start http://bbs.fengniao.com/forum/9373824.html
+url: 1/1||resource: 9/9
+url: 1/2||resource: 19/19
+url: 1/3||resource: 21/21
+url: 1/4||resource: 21/21
+$ mini-spider -download -false
+Cg-77VggNSKISexrAAvLkt1pk-sAADfPgMOPsEAC8uq536.jpg completed            
+Cg-40lggNLuITlKGAAaIKdnN16YAADfPAIfryoABohB596.jpg completed            
+Cg-77VggNWmIVXTwAAP2OrqqXKIAADfPwG44UYAA_ZS536.jpg completed            
+Cg-77VggNemIXgi7AAX2dyHXWx0AADfQAEwyIAABfaP695.jpg completed            
+Cg-40lggNo2IdlT0AAiEl8en1M0AADfQQKQklQACISv087.jpg completed
+...
+```
+
+
 
 #### **1.首先你需要分析一个网站，并输入你想提取的内容（包含下一个网站的地址和你需要的资源），如**
 
@@ -129,4 +150,4 @@ $ mini-spider -download /User/zyh/test
 
 ## 当前版本
 
-Ver 0.0.1 : 基本功能测试阶段。
+Ver 0.0.2 : 基本功能测试阶段。

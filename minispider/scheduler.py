@@ -11,7 +11,7 @@ from .extractor import Extractor
 
 
 class MiniSpider:
-    def __init__(self, original_url=None, timeout=2, search=(), ssl_context=None, url_check=False,
+    def __init__(self, original_url=None, timeout=2, search=(), ssl_context=None, url_check=True,
                  similarity_threshold=0.6,
                  display_number=100):
         # Parse chinese to ascii and delete parameters.
@@ -19,7 +19,7 @@ class MiniSpider:
         if self.url:
             self.url_check = url_check
             self._check_url()
-            self.host = 'http://' + original_url.split('//')[1].split('/')[0]
+            self.host = 'http://' + self.url.split('//')[1].split('/')[0]
         # Create ssl context.
         if ssl_context:
             self.ssl_context = ssl_context

@@ -1,21 +1,29 @@
+#!/usr/bin/env python3
+import os
+import json
+
 from setuptools import setup, find_packages
 
-project_name = 'mini-spider'
-module_name = 'minispider'
+PROJECT_NAME = 'mini-spider'
+MODULE_NAME = 'minispider'
+
+here = os.path.abspath(os.path.dirname(__file__))
+project_info = json.loads(open(os.path.join(here, 'mini-spider.json'), encoding='utf-8').read())
 
 setup(
-    name='mini-spider',
-    version='0.0.1',
+    name=project_info['name'],
+    version=project_info['version'],
 
-    author='ZhangYunHao',
-    author_email='workvl@163.com',
+    author=project_info['author'],
+    author_email=project_info['author_email'],
 
-    description='Simple way to create your spider.',
-    long_description='None.',
-    keywords="python spider tool package",
+    description=project_info['description'],
+    long_description=project_info['long_description'],
+    keywords=project_info['keywords'],
 
-    url='https://github.com/ZYunH/Mini-Spider',
-    license='MIT Licence',
+    url=project_info['url'],
+    license=project_info['license'],
+
     platforms='any',
 
     packages=find_packages(),

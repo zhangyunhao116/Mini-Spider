@@ -6,12 +6,15 @@ from .scheduler import MiniSpider
 from .extractor import Extractor
 from .downloader import MiniSpiderDownloader
 
+__version__ = '0.0.2'
+
 
 def main():
     # Make parser for terminal.
     description = 'MiniSpider makes it easy to create user-friendly spider.'
     usage = 'mini-spider [OPTION]... [URL]...'
-    parser = argparse.ArgumentParser(prog='MiniSpider', description=description, usage=usage)
+    parser = argparse.ArgumentParser(prog='MiniSpider', description=description, usage=usage,
+                                     epilog='Powered by ZYunH. Version:%s' % __version__)
 
     # Add arguments.
     analysis_help = 'Analysis a URL.'
