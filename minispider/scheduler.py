@@ -19,7 +19,7 @@ class MiniSpider:
         if self.url:
             self.url_check = url_check
             self._check_url()
-            self.host = 'http://' + self.url.split('//')[1].split('/')[0]
+            self.host = self.url.split('//')[0] + '//' + self.url.split('//')[1].split('/')[0]
         # Create ssl context.
         if ssl_context:
             self.ssl_context = ssl_context
@@ -46,7 +46,7 @@ class MiniSpider:
     def _check_url(self):
         if self.url_check:
             # Add protocol if not exist.
-            if self.url.split('://', 1)[0] != 'http' or 'https':
+            if self.url.split('://', 1)[0] not in ('http', 'https', 'ftp'):
                 self.url = 'http://' + self.url
         # Parse chinese to ascii.
         self.url = urllib.parse.quote(self.url, safe='/:?=@&[]')
@@ -85,12 +85,12 @@ class MiniSpider:
     def _display_result(self):
         for index, item in enumerate(self.result):
             print('[%s]:' % index)
-            flag = 1
+            not_print_flag = 1
             for i, j in enumerate(item):
                 if i >= self.display_number:
-                    if flag:
+                    if not_print_flag:
                         print('%s is not displayed' % (len(item) - self.display_number))
-                        flag = 0
+                        not_print_flag = 0
                     continue
                 # Print href url.
                 if index >= self.http_flag:
@@ -406,7 +406,7 @@ class MiniSpider:
                 content = self._url_read(url)
                 Extractor(content).run_all_extractor(flag)
             except Exception as e:
-                MiniSpiderSQL().update_url_stats(flag,1)
+                MiniSpiderSQL().update_url_stats(flag, 1)
                 print(e)
 
             MiniSpiderSQL().display_all()

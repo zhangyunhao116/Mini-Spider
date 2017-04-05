@@ -48,7 +48,7 @@ $ pip install mini-spider
 
 ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓猛戳↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
 
-## [Mini-spider使用教程](http://iamzyh.com/collection/)
+## [Mini-spider使用教程](http://pythonhosted.org/mini-spider)
 
 
 

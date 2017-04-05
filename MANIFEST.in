@@ -1,4 +1,6 @@
 include *.txt
 include *.rst
+include *.json
 include mini-spider
 include README.md
+include README.rst

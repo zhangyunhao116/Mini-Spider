@@ -8,7 +8,7 @@ PROJECT_NAME = 'mini-spider'
 MODULE_NAME = 'minispider'
 
 here = os.path.abspath(os.path.dirname(__file__))
-project_info = json.loads(open(os.path.join(here, 'mini-spider.json'), encoding='utf-8').read())
+project_info = json.loads(open(os.path.join(here, 'mini-spider.json')).read())
 
 setup(
     name=project_info['name'],

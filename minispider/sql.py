@@ -257,9 +257,9 @@ class MiniSpiderSQL(SQL):
 
         result = list(map(lambda x: x[0], result))
 
-        for index, item in enumerate(result):
+        for index, item in enumerate(result, 1):
             if index < num:
-                print(item)
+                print('[%s]:%s' % (index, item))
 
     def reset(self, table_name):
         if table_name == 'u':
