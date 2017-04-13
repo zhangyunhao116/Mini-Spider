@@ -49,8 +49,8 @@ class Downloader:
         self.block_size = int(block_size)
         self.block_list = []
         self.timeout = timeout
-        self.content_length_now = 0
-        self.content_length_size = 0
+        self.context_length_now = 0
+        self.context_length_size = 0
         # File Info.
         self.info = {}
         self.file_type = 'Unknown'
@@ -64,7 +64,7 @@ class Downloader:
     def download(self):
         if self.url.split('://')[0] == 'ftp':
             self.ftp_download()
-        elif self.url.split('://')[0] == 'http' or 'https':
+        elif self.url.split('://')[0] in ('http', 'https'):
             self.http_download()
         else:
             print('Unknown protocol!')
@@ -83,9 +83,9 @@ class Downloader:
                 # Save info.
                 self.info[k] = v
                 # Save important info.
-                if k == 'Content-Range':
-                    self.content_length_size = int(v.split('/')[-1])
-                if k == 'Content-Type':
+                if k == 'Context-Range':
+                    self.context_length_size = int(v.split('/')[-1])
+                if k == 'Context-Type':
                     self.file_type = v
             # Save server code.
             self.server_code = f.getcode()
@@ -97,7 +97,7 @@ class Downloader:
             print('%s is already completed!' % self.filename)
             return True
         # If server support resume function.
-        if self._support_resume() and self.info['Content-Length'] == 2 or '2':
+        if self._support_resume() and self.info['Context-Length'] in (2, '2'):
             # Create block list.
             self._create_block_list()
             # Check log file.
@@ -105,23 +105,23 @@ class Downloader:
             # Start download.
             for start, end in self.block_list:
                 # Ignore downloaded parts.
-                if start < self.content_length_now:
+                if start < self.context_length_now:
                     continue
                 # Try download.
                 self._now_time = time.time()
                 self._log_save(start)
                 self._download(start, end)
                 # Update progress.
-                self.content_length_now = end
-                self._log_save(self.content_length_now)
+                self.context_length_now = end
+                self._log_save(self.context_length_now)
                 # Print progress.
                 self._progress_bar()
             # Delete log file
-            if self.content_length_now == self.content_length_size:
+            if self.context_length_now == self.context_length_size:
                 self._download_success()
                 self._log_delete()
         else:
-            self._download(self.content_length_now, self.content_length_size)
+            self._download(self.context_length_now, self.context_length_size)
 
     def ftp_download(self):
         # Extract ip address and host.
@@ -137,7 +137,7 @@ class Downloader:
             # Simple way.
             self._now_time = time.time()
             ftp = urllib.request.URLopener()
-            ftp.retrieve(url, os.path.join(self.work_path, self.filename), reporthook=self._ftp_progress)
+            ftp.retrieve(self.url, os.path.join(self.work_path, self.filename), reporthook=self._ftp_progress)
         else:
             # If ftp serve need user and password.
             with ftplib.FTP(host=ip, user=self.ftp_user, passwd=self.ftp_password) as ftp:
@@ -155,18 +155,18 @@ class Downloader:
         if self.headers == {}:
             self.headers = _headers_chrome
 
-    def _log_save(self, content_length):
-        content = [content_length]
+    def _log_save(self, context_length):
+        context = [context_length]
         file = open(self.log_filename, mode='w')
-        for index, item in enumerate(content):
-            file.write(str(content[index]) + '\n')
+        for index, item in enumerate(context):
+            file.write(str(context[index]) + '\n')
         file.close()
 
     def _log_read(self):
         result = []
 
-        with open(self.log_filename, 'r') as content:
-            for line in content:
+        with open(self.log_filename, 'r') as context:
+            for line in context:
                 if line[-1] == '\n':
                     line = line[0:-1]
                 result.append(line)
@@ -178,7 +178,7 @@ class Downloader:
 
     def _log_check(self):
         if os.path.isfile(self.log_filename):
-            self.content_length_now = int(self._log_read())
+            self.context_length_now = int(self._log_read())
         else:
             self._log_save(0)
 
@@ -205,21 +205,21 @@ class Downloader:
 
     def _create_block_list(self):
         # Attention: request length is closed interval, but python array is different.
-        block_number = int((self.content_length_size - self.content_length_now) / self.block_size) + 1
+        block_number = int((self.context_length_size - self.context_length_now) / self.block_size) + 1
         l = [x * self.block_size for x in range(0, block_number)]
-        if l[-1] > self.content_length_size:
-            l[-1] = self.content_length_size + 1
+        if l[-1] > self.context_length_size:
+            l[-1] = self.context_length_size + 1
         else:
-            l.append(self.content_length_size)
+            l.append(self.context_length_size)
         for i in range(1, len(l)):
             temp = [l[i - 1], l[i]]
             self.block_list.append(tuple(temp))
 
     def _progress_bar(self):
-        if self.content_length_size == 0:
+        if self.context_length_size == 0:
             return False
-        progress = (self.content_length_now / self.content_length_size)
-        size_mb = self.content_length_size / (1024 * 1024)
+        progress = (self.context_length_now / self.context_length_size)
+        size_mb = self.context_length_size / (1024 * 1024)
         _time = (time.time() - self._now_time)
         self._speed_pre_second = int(self.block_size) / (_time * 1024 * 1024)
         # Print in terminal or python interpreter.
@@ -240,16 +240,16 @@ class Downloader:
         req.add_header('Range', byte_range)
         with urllib.request.urlopen(req, context=self.ssl_context, timeout=self.timeout) as r:
             with open(os.path.join(self.work_path, self.filename), mode='ab+', buffering=self.block_size) as f:
-                f.seek(self.content_length_now)
+                f.seek(self.context_length_now)
                 f.truncate()
                 f.write(r.read())
 
     def _ftp_progress(self, _chunk_num, _chunk_size, _file_size):
         self.block_size = _chunk_size
-        self.content_length_now = _chunk_num * _chunk_size
-        self.content_length_size = _file_size
-        if self.content_length_now > self.content_length_size:
-            self.content_length_now = self.content_length_size
+        self.context_length_now = _chunk_num * _chunk_size
+        self.context_length_size = _file_size
+        if self.context_length_now > self.context_length_size:
+            self.context_length_now = self.context_length_size
             self._download_success()
         else:
             self._progress_bar()
@@ -258,7 +258,7 @@ class Downloader:
     def _check_file(self):
         try:
             file_size = os.path.getsize(os.path.join(self.work_path, self.filename))
-            if file_size == self.content_length_size:
+            if file_size == self.context_length_size:
                 return True
             else:
                 return False
@@ -280,7 +280,7 @@ class Downloader:
             # Delete get parameters.
             self.url = self.url.split('?', 1)[0]
             # Add protocol if not exist.
-            if self.url.split('://', 1)[0] != 'http' or 'https':
+            if self.url.split('://', 1)[0] not in ('http', 'https', 'ftp'):
                 self.url = 'http://' + self.url
         # Parse chinese to ascii.
         self.url = urllib.parse.quote(self.url, safe='/:?=@&[]')
