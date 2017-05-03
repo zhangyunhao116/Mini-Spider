@@ -115,13 +115,14 @@ class MiniSpider:
 
     @staticmethod
     def _content_decode(content):
-        try:
-            return content.decode('utf-8')
-        except UnicodeDecodeError:
+        charset = ('utf-8', 'gbk', 'gb2312', 'gb18030')
+        for i in charset:
             try:
-                return content.decode('gbk')
+                return content.decode(i)
             except UnicodeDecodeError:
-                return content.decode('gb2312')
+                pass
+
+        raise Exception('Can not decode the url.')
 
     @staticmethod
     def _initialize_search(search):

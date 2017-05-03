@@ -26,3 +26,5 @@ mini_spider.egg-info/PKG-INFO
 mini_spider.egg-info/top_level.txt
 
 dist/mini-spider-0.0.1.tar.gz
+
+test.py
