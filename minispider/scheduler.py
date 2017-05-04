@@ -83,6 +83,7 @@ class MiniSpider:
             self.result.append(temp)
 
     def _display_result(self):
+        tag_header = ''
         for index, item in enumerate(self.result):
             print('[%s]:' % index)
             not_print_flag = 1
@@ -92,9 +93,11 @@ class MiniSpider:
                         print('%s is not displayed' % (len(item) - self.display_number))
                         not_print_flag = 0
                     continue
-                # Print href url.
+                # Print tag url.
                 if index >= self.http_flag:
-                    j = self.host + j
+                    if not tag_header:
+                        tag_header = re.match('((?:[a-z]{0,10}\s*=\s*"))', j).group(0)
+                    j = self.host + j.replace(tag_header, '')[0:-1]
                 print('---(%s)%s' % (i, j))
 
     def _pattern_make_http(self):
@@ -102,9 +105,9 @@ class MiniSpider:
             temp = "http://\S+?\." + i
             self.pattern_list.append(temp)
 
-    def _pattern_make_href(self):
+    def _pattern_make_tag(self):
         for i in self.search_list:
-            temp = 'href="(/\S+?\.%s)"' % i
+            temp = '(?:[a-z]{0,10}\s*=\s*")/\S+\.%s\S*"' % i
             self.pattern_list.append(temp)
 
     @staticmethod
@@ -191,7 +194,7 @@ class MiniSpider:
 
     @staticmethod
     def _get_suffix_name(_url):
-        return _url.rsplit('.', 1)[1]
+        return _url.rsplit('.', 1)[1].split('?')[0].replace('"', '')
 
     @staticmethod
     def duplicate_eliminate(list_input):
@@ -228,15 +231,15 @@ class MiniSpider:
             # Classify the url into certain types.
             self._handle_match(match_list)
             match_list = []
-        # Get length of http pattern match list. First item is href item.
+        # Get length of http pattern match list. First item is tag item.
         self.http_flag = len(self.result)
 
         # Delete http pattern.
         self.pattern_list = []
 
-        # Make href pattern.
-        self._pattern_make_href()
-        # Match href pattern.
+        # Make tag pattern.
+        self._pattern_make_tag()
+        # Match tag pattern.
         match_list = []
         for i in self.pattern_list:
             match = re.findall(i, content)
@@ -310,27 +313,31 @@ class MiniSpider:
         if len(same_block) == len(specific_block_list[0]):
             char_supplement = ''
         else:
-            char_supplement = '\S+?'
+            char_supplement = '\S*'
 
         result_pattern = header + host + last_block + char_supplement + suffix_name
 
         return result_pattern
 
-    def make_specific_href_pattern(self, specific_block_list, host):
-        """Make specific pattern for href URL."""
+    def make_specific_tag_pattern(self, specific_block_list, host):
+        """Make specific pattern for tag URL."""
         # Get longest match block.
         same_size = self.find_longest_size(specific_block_list)
 
         # Get same_block and it's length.
         same_block = specific_block_list[0][0:same_size]
+
+        # Get header and delete header in same_block.
+        header = re.match('((?:[a-z]{0,10}\s*=\s*"))', same_block).group(0)
+        same_block = same_block.replace(header, '')
         same_length = len(same_block)
 
         # Get suffix name and add regular expression format.
         suffix_name = '\.' + self._get_suffix_name(specific_block_list[0])
 
         # If only one item,delete suffix name.
-        if same_length == len(specific_block_list[0]):
-            same_block = same_block[0:same_length - len(self._get_suffix_name(specific_block_list[0])) - 1]
+        if len(specific_block_list) == 1:
+            same_block = same_block[0:same_length - len(self._get_suffix_name(specific_block_list[0])) - 2]
 
         # Make specific pattern.
         main_block = ''
@@ -351,10 +358,9 @@ class MiniSpider:
         if same_length == len(specific_block_list[0]):
             char_supplement = ''
         else:
-            char_supplement = '\S+?'
+            char_supplement = '\S*'
 
-        pattern = '''href="(''' + main_block + char_supplement + suffix_name + ''')"'''
-
+        pattern = header + '(' + main_block + char_supplement + suffix_name + ')' + '\S*"'
         return pattern, host
 
     def choose_block(self, num, start=None, end=None):
@@ -363,14 +369,14 @@ class MiniSpider:
         http_flag = self._read_temp()['http_flag']
         host = self._read_temp()['host']
 
-        # Make href pattern.
+        # Make tag pattern.
         if num >= http_flag:
             if start is not None and end is not None:
-                specific_pattern = self.make_specific_href_pattern(block[start:end + 1], host)
+                specific_pattern = self.make_specific_tag_pattern(block[start:end + 1], host)
             elif start is not None:
-                specific_pattern = self.make_specific_href_pattern(block[start:start + 1], host)
+                specific_pattern = self.make_specific_tag_pattern(block[start:start + 1], host)
             else:
-                specific_pattern = self.make_specific_href_pattern(block[0:], host)
+                specific_pattern = self.make_specific_tag_pattern(block[0:], host)
         # Make http pattern.
         else:
             if start is not None and end is not None:
