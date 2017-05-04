@@ -4,13 +4,13 @@
 [![platform](https://img.shields.io/badge/python-3.5-green.svg)]()
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](https://pypi.python.org/pypi/mini-spider/)
 
-Mini-Spider是一个实用的爬虫工具，它的意义在于快速获得你所要的资源，而不用去关注诸如爬虫构造、数据存储、网络环境、语言实现等一系列的事情。现在你只需要简单的几个命令，就可以获得你需要的东西！
+Mini-Spider是一个实用的爬虫工具，它的意义在于快速获得你所要的资源，而不用去关注诸如爬虫构造、数据存储、网络环境、语言实现等一系列的事情。现在你只需要简单的几个命令，就可以创建一个爬虫，并完成你的任务！
 
 使用mini-spider，你仅需要四步即可创建属于你自己的爬虫！（大部分时候）
 
 ## 特性
 
-- [x] 网页自动提取资源并根据算法分类（包括完整url和href标签内容）
+- [x] 网页自动提取资源并根据算法分类（包括完整url和所有html标签内容）
 - [x] 根据资源自动生成提取器
 - [x] 自定义提取器以及Host数据
 - [x] 自动将提取内容加入相应数据库
@@ -54,4 +54,4 @@ $ pip install mini-spider
 
 ## 当前版本
 
-Ver 0.0.3 : 基本功能测试阶段。
+Ver 0.0.4 : 基本功能测试阶段。
