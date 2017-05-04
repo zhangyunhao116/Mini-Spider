@@ -6,7 +6,7 @@
 
 Mini-Spider是一个实用的爬虫工具，它的意义在于快速获得你所要的资源，而不用去关注诸如爬虫构造、数据存储、网络环境、语言实现等一系列的事情。现在你只需要简单的几个命令，就可以创建一个爬虫，并完成你的任务！
 
-使用mini-spider，你仅需要四步即可创建属于你自己的爬虫！（大部分时候）
+使用mini-spider，你仅需要两步即可创建属于你自己的爬虫！（大部分时候）
 
 ## 特性
 
@@ -37,7 +37,7 @@ $ python3 setup.py install
 或者，使用pip下载
 
 ```console
-$ pip install mini-spider
+$ pip3 install mini-spider
 ```
 
 ## 如何使用

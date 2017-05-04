@@ -6,7 +6,7 @@ from .scheduler import MiniSpider
 from .extractor import Extractor
 from .downloader import MiniSpiderDownloader
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 
 def main():
