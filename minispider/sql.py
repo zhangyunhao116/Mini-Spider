@@ -164,6 +164,13 @@ class MiniSpiderSQL:
         elif table_name == 'resource':
             self.insert_resource(result, 'user')
 
+    def reset(self, table_name):
+        if table_name == 'u':
+            for i in range(1, self.num_all('next_url') + 1):
+                self.update_status('next_url',1,i)
+        elif table_name == 'u':
+            for i in range(1, self.num_all('resource') + 1):
+                self.update_status('resource', 1, i)
 
 if __name__ == '__main__':
-    MiniSpiderSQL().import_txt('1.txt', 'resource')
+    pass
