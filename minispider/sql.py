@@ -31,7 +31,7 @@ class MiniSpiderSQL:
                             );""")
 
     def insert_next_url(self, url_list):
-        """Insert a list of next URL into database table next_url."""
+        """Insert a list of URL into database table next_url."""
         with sqlite3.connect(self.db_name) as c:
             cur = c.cursor()
             for i in url_list:
@@ -42,7 +42,7 @@ class MiniSpiderSQL:
                     pass
 
     def insert_resource(self, resource_list, source):
-        """Insert a list of resource URL into database table resource."""
+        """Insert a list of URL into database table resource."""
         with sqlite3.connect(self.db_name) as c:
             cur = c.cursor()
             for i in resource_list:
@@ -135,7 +135,7 @@ class MiniSpiderSQL:
                 print('[%s:%s]%s' % (index, temp, item[0]))
 
     def export_txt(self, table_name, file_name):
-        """Export all URL from table_name to a txt file."""
+        """Export all the URL from table_name to a txt file."""
         with sqlite3.connect(self.db_name) as c:
             cur = c.cursor()
             if table_name == 'next_url':
@@ -165,6 +165,7 @@ class MiniSpiderSQL:
             self.insert_resource(result, 'user')
 
     def reset(self, table_name):
+        """Reset all the data that reside in table_name status to 1 ."""
         if table_name == 'u':
             for i in range(1, self.num_all('next_url') + 1):
                 self.update_status('next_url',1,i)

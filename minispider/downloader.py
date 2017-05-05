@@ -13,7 +13,7 @@ from .sql import MiniSpiderSQL
 
 
 class Downloader:
-    """This class is used to handle the Download requests that arrive at the server."""
+    """This class is used to handle the Download requests."""
 
     def __init__(self, original_url='', filename='', work_path='', block_size=1024 * 1024, headers={}, timeout=2.0,
                  ssl_context=None,
