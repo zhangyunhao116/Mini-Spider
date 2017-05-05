@@ -301,7 +301,7 @@ class MiniSpiderDownloader:
 
         while self.SQL.num_available('resource'):
             # Pop resource from database.
-            id, url, source = self.SQL.pop('resource')
+            id, url, status, source = self.SQL.pop('resource')
 
             # Download.
             try:
