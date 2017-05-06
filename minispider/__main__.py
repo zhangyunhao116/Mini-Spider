@@ -54,8 +54,8 @@ def main():
     list_help = 'List url in next_url or resource.options: "u" or "r"'
     parser.add_argument('-list', help=list_help, nargs='+', dest='list_url', metavar='')
 
-    false_help = 'Disable classification function in -download.'
-    parser.add_argument('-false', help=false_help, nargs='?', dest='false_set', const=True, metavar='')
+    false_help = 'Enable classification function in -download.'
+    parser.add_argument('-classify', help=false_help, nargs='?', dest='classify', const=False, metavar='')
 
     reset_help = 'Reset database stats = 1.(default: u)'
     parser.add_argument('-reset', help=reset_help, nargs='?', dest='reset', const='u', choices=['u', 'r'])
@@ -146,10 +146,10 @@ def main():
 
     # Start downloading.
     elif args.download:
-        classify = True
+        classify = False
         timeout = 2.0
-        if args.false_set:
-            classify = False
+        if args.classify:
+            classify = True
         if args.time_out:
             timeout = args.time_out[0]
         if args.download is True:
