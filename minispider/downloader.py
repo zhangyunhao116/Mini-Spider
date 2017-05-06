@@ -13,7 +13,7 @@ from .sql import MiniSpiderSQL
 
 
 class Downloader:
-    """This class is used to handle the Download requests that arrive at the server."""
+    """This class is used to handle the Download requests."""
 
     def __init__(self, original_url='', filename='', work_path='', block_size=1024 * 1024, headers={}, timeout=2.0,
                  ssl_context=None,
@@ -295,13 +295,13 @@ class MiniSpiderDownloader:
         # If work path provided, use it.
         if work_path is not None:
             if work_path.find('here') == 0:
-                self.work_path = os.path.join(self.work_path, work_path.replace('here',''))
+                self.work_path = os.path.join(self.work_path, work_path.replace('here', ''))
             else:
                 self.work_path = work_path
 
-        while self.SQL.num_available_resource():
+        while self.SQL.num_available('resource'):
             # Pop resource from database.
-            id, url, source = self.SQL.pop_resource()
+            id, url, status, source = self.SQL.pop('resource')
 
             # Download.
             try:
@@ -312,7 +312,7 @@ class MiniSpiderDownloader:
                     Downloader(url, work_path=self.work_path, timeout=timeout).download()
             except Exception as e:
                 print(e)
-                self.SQL.update_resource_stats(url_id=id, stats=1)
+                self.SQL.update_status('resource', 2, id)
 
 
 if __name__ == "__main__":

@@ -393,7 +393,7 @@ class MiniSpider:
         if url is None:
             # If url is not provided, use SQL data.
             try:
-                flag, url = MiniSpiderSQL().pop_url()
+                id, url, status = MiniSpiderSQL().pop('next_url')
             except TypeError:
                 raise Exception('Please input original url!')
 
@@ -403,17 +403,17 @@ class MiniSpider:
             Extractor(content).run_all_extractor(0)
         except Exception as e:
             print(e)
-        MiniSpiderSQL().display_all()
+        MiniSpiderSQL().print_all()
 
         # 3.Loop.
-        while MiniSpiderSQL().num_available_url():
-            flag, url = MiniSpiderSQL().pop_url()
+        while MiniSpiderSQL().num_available('next_url'):
+            id, url, status = MiniSpiderSQL().pop('next_url')
 
             try:
                 content = self._url_read(url)
-                Extractor(content).run_all_extractor(flag)
+                Extractor(content).run_all_extractor(id)
             except Exception as e:
-                MiniSpiderSQL().update_url_stats(flag, 1)
+                MiniSpiderSQL().update_status('next_url', 2, id)
                 print(e)
 
-            MiniSpiderSQL().display_all()
+            MiniSpiderSQL().print_all()

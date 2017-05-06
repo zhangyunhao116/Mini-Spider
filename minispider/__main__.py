@@ -51,11 +51,11 @@ def main():
     import_help = 'Import url into database.'
     parser.add_argument('-import', help=import_help, nargs=1, dest='import_url', metavar='[FileName]')
 
-    list_help = 'List url in url_list or resource.options: "u" or "r"'
+    list_help = 'List url in next_url or resource.options: "u" or "r"'
     parser.add_argument('-list', help=list_help, nargs='+', dest='list_url', metavar='')
 
-    false_help = 'Disable classification function in -download.'
-    parser.add_argument('-false', help=false_help, nargs='?', dest='false_set', const=True, metavar='')
+    false_help = 'Enable classification function in -download.'
+    parser.add_argument('-classify', help=false_help, nargs='?', dest='classify', const=False, metavar='')
 
     reset_help = 'Reset database stats = 1.(default: u)'
     parser.add_argument('-reset', help=reset_help, nargs='?', dest='reset', const='u', choices=['u', 'r'])
@@ -146,10 +146,10 @@ def main():
 
     # Start downloading.
     elif args.download:
-        classify = True
+        classify = False
         timeout = 2.0
-        if args.false_set:
-            classify = False
+        if args.classify:
+            classify = True
         if args.time_out:
             timeout = args.time_out[0]
         if args.download is True:
@@ -162,9 +162,9 @@ def main():
         # Choose database.
         if args.to:
             if args.to[0] == 'u':
-                MiniSpiderSQL().import_txt(args.import_url[0], 'url_list')
+                MiniSpiderSQL().import_txt('next_url', args.import_url[0])
             elif args.to[0] == 'r':
-                MiniSpiderSQL().import_txt(args.import_url[0], 'resource')
+                MiniSpiderSQL().import_txt('resource', args.import_url[0])
             print('Import success!')
         else:
             print("Error: Please input  '-to u' or '-to r'")
@@ -175,9 +175,9 @@ def main():
         # Choose database.
         if args.to:
             if args.to[0] == 'u':
-                MiniSpiderSQL().export_txt(args.export_url[0], 'url_list')
+                MiniSpiderSQL().export_txt('next_url', args.export_url[0])
             elif args.to[0] == 'r':
-                MiniSpiderSQL().export_txt(args.export_url[0], 'resource')
+                MiniSpiderSQL().export_txt('resource', args.export_url[0])
             print('Export success!')
         else:
             print("Error: Please input  '-to u' or '-to r'")
@@ -189,7 +189,7 @@ def main():
         if len(args.list_url) == 2:
             num = int(args.list_url[1])
         if args.list_url[0] == 'u':
-            MiniSpiderSQL().list_url(table_name='url_list', num=num)
+            MiniSpiderSQL().list_url(table_name='next_url', num=num)
         elif args.list_url[0] == 'r':
             MiniSpiderSQL().list_url(table_name='resource', num=num)
         else:
