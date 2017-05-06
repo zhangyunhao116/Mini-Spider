@@ -11,22 +11,7 @@
 
 *.extractor
 
-minispider/test.py
-
 .pypirc
 
-mini_spider.egg-info/SOURCES.txt
-
-mini_spider.egg-info/dependency_links.txt
-
-mini_spider.egg-info/entry_points.txt
-
-mini_spider.egg-info/PKG-INFO
-
-mini_spider.egg-info/top_level.txt
-
-dist/mini-spider-0.0.1.tar.gz
-
-test.py
 
 .idea/workspace.xml___jb_tmp___

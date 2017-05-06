@@ -6,6 +6,7 @@ import os.path
 
 class MiniSpiderSQL:
     """Allows you accessing the Mini-Spider database using a one-line command."""
+
     def __init__(self):
         # Database filename is 'MiniSpider.db'.
         self.db_name = os.path.join(os.getcwd(), 'MiniSpider.db')
@@ -168,10 +169,11 @@ class MiniSpiderSQL:
         """Reset all the data that reside in table_name status to 1 ."""
         if table_name == 'u':
             for i in range(1, self.num_all('next_url') + 1):
-                self.update_status('next_url',1,i)
+                self.update_status('next_url', 1, i)
         elif table_name == 'u':
             for i in range(1, self.num_all('resource') + 1):
                 self.update_status('resource', 1, i)
+
 
 if __name__ == '__main__':
     pass
