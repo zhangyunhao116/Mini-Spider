@@ -124,6 +124,7 @@ class MiniSpider:
 
     @staticmethod
     def _content_decode(content):
+        """Decode the content."""
         charset = ('utf-8', 'gbk', 'gb2312', 'gb18030')
         for i in charset:
             try:
@@ -135,10 +136,13 @@ class MiniSpider:
 
     @staticmethod
     def _initialize_search(search):
+        """Return a tuple of search-URL."""
+        # Only one item.
         temp = []
         if type(search) == str:
             temp.append(search)
             return temp
+        # Include many items.
         for i in search:
             temp.append(i)
         return temp
@@ -190,7 +194,7 @@ class MiniSpider:
             print('Error!We find nothing!')
             return False
 
-        # Save result、host in temp file.
+        # Save result&host in temp file.
         temp = {
             'result': self.result,
             'host': self.host
