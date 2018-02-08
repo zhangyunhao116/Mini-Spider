@@ -266,7 +266,7 @@ Cg-40lggNo2IdlT0AAiEl8en1M0AADfQQKQklQACISv087.jpg completed
 | -export   | 从数据库中导出url至文本文件 | [filename] | 参数为文件名（必要）。（-to为其必要选项，指定了从资源数据库或url数据库中导出url) | mini-spider -export 1.txt -to u          |
 | -import   | 从文本文件中导出url至数据库 | [filename] | 参数为文件名（必要）。（-to为其必要选项，指定了从文本文件提取的信息放入资源数据库或url数据库) | mini-spider -import 1.txt -to u          |
 | -list     |   打印数据库中信息至屏幕   |   [1,2]    | 第一个参数为必要，可选项为{u,r}，即选择url数据库或资源数据库。第二个参数可选，设置最大打印数目。 | mini-spider -list u 5                    |
-| -false    |       禁止        |     无      |               禁止数据库自动分类功能                | mini-spider -download /User/zyh/test -false |
+| -classify |       开启        |     无      |               开启数据库自动分类功能                | mini-spider -download /User/zyh/test -classify |
 | -reset    |     重置数据库状态     |   {u,r}    |    将某个数据库中的所有url状态重置为可用，在下次爬取时会使用它们。     | mini-spider -reset u                     |
 
 以上是mini-spider所有命令，下面会根据它们使用的时机进行介绍。

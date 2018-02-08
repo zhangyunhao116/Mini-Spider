@@ -58,9 +58,9 @@ class MiniSpiderSQL:
         with sqlite3.connect(self.db_name) as c:
             cur = c.cursor()
             if table_name == 'next_url':
-                cur.execute("""SELECT COUNT(STATUS) FROM next_url WHERE status = 1""")
+                cur.execute("""SELECT COUNT(STATUS) FROM next_url WHERE status >= 1""")
             elif table_name == 'resource':
-                cur.execute("""SELECT COUNT(STATUS) FROM resource WHERE status = 1""")
+                cur.execute("""SELECT COUNT(STATUS) FROM resource WHERE status >= 1""")
             num = cur.fetchone()[0]
         return num
 

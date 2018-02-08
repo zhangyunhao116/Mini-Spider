@@ -313,6 +313,7 @@ class MiniSpiderDownloader:
             except Exception as e:
                 print(e)
                 self.SQL.update_status('resource', 2, id)
+            print('resource:%s/%s' % (self.SQL.num_available('resource'), self.SQL.num_all('resource')))
 
 
 if __name__ == "__main__":

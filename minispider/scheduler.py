@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+
+"""
+scheduler.py
+------------
+
+This module provides a light-weight scheduler that manage the mini-spider. 
+"""
+
 import re
 import urllib.request
 import urllib.parse
@@ -8,6 +16,15 @@ import json
 from ssl import _create_unverified_context
 from .sql import MiniSpiderSQL
 from .extractor import Extractor
+
+
+def is_html_tag_pattern(item):
+    pattern = '([a-z]{0,10}\s*=\s*")'
+    try:
+        re.findall(pattern, item)[0]
+    except IndexError:
+        return False
+    return True
 
 
 class MiniSpider:
@@ -33,7 +50,6 @@ class MiniSpider:
         self.search_list = self._initialize_search(search)
         self.display_number = display_number
         self.result = []
-        self.http_flag = 0
 
     def _url_read(self, url=None):
         if url is None:
@@ -94,21 +110,11 @@ class MiniSpider:
                         not_print_flag = 0
                     continue
                 # Print tag url.
-                if index >= self.http_flag:
+                if is_html_tag_pattern(j):
                     if not tag_header:
                         tag_header = re.match('((?:[a-z]{0,10}\s*=\s*"))', j).group(0)
                     j = self.host + j.replace(tag_header, '')[0:-1]
                 print('---(%s)%s' % (i, j))
-
-    def _pattern_make_http(self):
-        for i in self.search_list:
-            temp = "http://\S+?\." + i
-            self.pattern_list.append(temp)
-
-    def _pattern_make_tag(self):
-        for i in self.search_list:
-            temp = '(?:[a-z]{0,10}\s*=\s*")/\S+\.%s\S*"' % i
-            self.pattern_list.append(temp)
 
     @staticmethod
     def similar(str1, str2):
@@ -118,6 +124,7 @@ class MiniSpider:
 
     @staticmethod
     def _content_decode(content):
+        """Decode the content."""
         charset = ('utf-8', 'gbk', 'gb2312', 'gb18030')
         for i in charset:
             try:
@@ -129,72 +136,16 @@ class MiniSpider:
 
     @staticmethod
     def _initialize_search(search):
+        """Return a tuple of search-URL."""
+        # Only one item.
         temp = []
         if type(search) == str:
             temp.append(search)
             return temp
+        # Include many items.
         for i in search:
             temp.append(i)
         return temp
-
-    def find_longest_size(self, match_list):
-        # If only one item, return.
-        if len(match_list) == 1:
-            return len(match_list[0])
-
-        size = len(match_list[0])
-        for index, item in enumerate(match_list):
-            if index == len(match_list) - 1:
-                break
-            temp = self._find_longest_match(item, match_list[index + 1])
-            if temp < size:
-                size = temp
-
-        return size
-
-    @staticmethod
-    def _find_longest_match(str1, str2):
-        len_1 = len(str1)
-        len_2 = len(str2)
-
-        if len_1 >= len_2:
-            length = len_2
-        else:
-            length = len_1
-
-        for i in range(0, length):
-            if str1[i] == str2[i]:
-                continue
-            else:
-                return i
-
-    @staticmethod
-    def _is_letter(match_str):
-        pattern = '[a-z]'
-        if re.findall(pattern, match_str):
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def _is_letter_capital(match_str):
-        pattern = '[A-Z]'
-        if re.findall(pattern, match_str):
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def _is_number(match_str):
-        pattern = '[0-9]'
-        if re.findall(pattern, match_str):
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def _get_suffix_name(_url):
-        return _url.rsplit('.', 1)[1].split('?')[0].replace('"', '')
 
     @staticmethod
     def duplicate_eliminate(list_input):
@@ -220,34 +171,22 @@ class MiniSpider:
         # Read URL content.
         content = self._url_read()
 
-        # Make http pattern.
-        self._pattern_make_http()
-        # Match http pattern.
+        # Make pattern.
+        for i in self.search_list:
+            temp = "(?:[a-z]{0,5})://\S+?\." + i
+            self.pattern_list.append(temp)
+            temp = '(?:[a-z]{0,10}\s*=\s*")/\S+\.%s\S*"' % i
+            self.pattern_list.append(temp)
+
+        # Match pattern.
         match_list = []
         for i in self.pattern_list:
             match = re.findall(i, content)
             for j in match:
                 match_list.append(j)
-            # Classify the url into certain types.
-            self._handle_match(match_list)
-            match_list = []
-        # Get length of http pattern match list. First item is tag item.
-        self.http_flag = len(self.result)
 
-        # Delete http pattern.
-        self.pattern_list = []
-
-        # Make tag pattern.
-        self._pattern_make_tag()
-        # Match tag pattern.
-        match_list = []
-        for i in self.pattern_list:
-            match = re.findall(i, content)
-            for j in match:
-                match_list.append(j)
-            # Classify the url into certain types.
-            self._handle_match(match_list)
-            match_list = []
+        # Handle match list by similarity threshold and add it to result.
+        self._handle_match(match_list)
 
         # Check if not match.
         if not self.result:
@@ -255,10 +194,9 @@ class MiniSpider:
             print('Error!We find nothing!')
             return False
 
-        # Save result、http_flag、host in temp file.
+        # Save result&host in temp file.
         temp = {
             'result': self.result,
-            'http_flag': self.http_flag,
             'host': self.host
         }
         self._save_temp(temp)
@@ -266,24 +204,169 @@ class MiniSpider:
         # Print result.
         self._display_result()
 
-    def make_specific_http_pattern(self, specific_block_list):
+    def choose_block(self, num, start=None, end=None):
+        # Choose block to make specific pattern. +1 used fix python array problem.
+        block = self._read_temp()['result'][num]
+        host = self._read_temp()['host']
+
+        # Make pattern.
+        if start is not None and end is not None:
+            specific_pattern = MakeRegex(block[start:end + 1]).pattern
+        elif start is not None:
+            specific_pattern = MakeRegex(block[start:start + 1]).pattern
+        else:
+            specific_pattern = MakeRegex(block[0:]).pattern
+
+        if is_html_tag_pattern(specific_pattern):
+            return specific_pattern, host
+
+        return specific_pattern
+
+    def start(self, url=None):
+        # 1.Get url.
+        if url is None:
+            # If url is not provided, use SQL data.
+            try:
+                id, url, status = MiniSpiderSQL().pop('next_url')
+            except TypeError:
+                raise Exception('Please input original url!')
+
+        # 2.Read content.
+        try:
+            content = self._url_read(url)
+            Extractor(content).run_all_extractor(0)
+        except Exception as e:
+            print(e)
+        MiniSpiderSQL().print_all()
+
+        # 3.Loop.
+        while MiniSpiderSQL().num_available('next_url'):
+            id, url, status = MiniSpiderSQL().pop('next_url')
+
+            try:
+                content = self._url_read(url)
+                Extractor(content).run_all_extractor(id)
+            except Exception as e:
+                MiniSpiderSQL().update_status('next_url', 2, id)
+                print(e)
+
+            MiniSpiderSQL().print_all()
+
+
+class MakeRegex:
+    """Receive a list of URL, return a tuple.
+    The tuple includes a regex which can match all items in the list,
+    and a HOST address if you need to use it to make a full pattern, usually in front of the pattern.
+    
+    Usage:
+    URL item must be a full URL or html tag includes relative address.
+    Each item in the list must be have a same part.
+    
+    For example:
+    1. ('https://github.com/issues/index.html', 'https://github.com/issues/show.html')
+    2. ('ftp://github.com/issues/example.zip', 'ftp://github.com/issues/example_2.zip')
+    3. ('href="/issues/index.html"', 'href="/issues/show.html"')
+    4. ('src = "/issues/index.html"', 'src = "/issues/show.html"')
+    
+    And incorrect example:
+    1. ('https://github.com/issues','https://github.com/issues/index.html')
+    -First item dose not contain a specified resource type such as .html
+    2. ('"/issues/index.html"', '"/issues/show.html"')
+    -Each item dose not contain a specified format. such as ' http:// ' or ' href=" '
+    3. ('href="/issues/index.html"', 'src = "/issues/index.html"')
+    -List have not a same part
+    """
+
+    def __init__(self, url_list):
+        self.url_list = list(url_list)
+
+    @property
+    def pattern(self):
+        # Determine URL is full URL or a relative address in the html tag.
+        if len(self.url_list[0].split('://')) == 2:
+            return self.make_specific_http_pattern(self.url_list)
+        else:
+            return self.make_specific_tag_pattern(self.url_list)
+
+    def find_longest_size(self, match_list):
+        """Return the longest common part of all items in the list."""
+        # If only one item, return.
+        if len(match_list) == 1:
+            return len(match_list[0])
+
+        size = len(match_list[0])
+        for index, item in enumerate(match_list):
+            if index == len(match_list) - 1:
+                break
+            temp = self._find_longest_match(item, match_list[index + 1])
+            if temp < size:
+                size = temp
+
+        return size
+
+    @staticmethod
+    def _find_longest_match(str1, str2):
+        """Return the longest common part between two strings."""
+        len_1 = len(str1)
+        len_2 = len(str2)
+
+        if len_1 >= len_2:
+            length = len_2
+        else:
+            length = len_1
+
+        for i in range(0, length):
+            if str1[i] == str2[i]:
+                continue
+            else:
+                return i
+
+    @staticmethod
+    def _get_suffix_name(_url):
+        return _url.rsplit('.', 1)[1].split('?')[0].replace('"', '')
+
+    @staticmethod
+    def _is_letter(match_str):
+        pattern = '[a-z]'
+        if re.findall(pattern, match_str):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def _is_letter_capital(match_str):
+        pattern = '[A-Z]'
+        if re.findall(pattern, match_str):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def _is_number(match_str):
+        pattern = '[0-9]'
+        if re.findall(pattern, match_str):
+            return True
+        else:
+            return False
+
+    def make_specific_http_pattern(self, url_list):
         """Make specific pattern for entire URL."""
         # Get longest match block.
-        same_size = self.find_longest_size(specific_block_list)
+        same_size = self.find_longest_size(url_list)
 
         # Get same_block.
-        same_block = specific_block_list[0][0:same_size]
+        same_block = url_list[0][0:same_size]
 
         # Get suffix name and add regular expression format.
-        suffix_name = '\.' + self._get_suffix_name(specific_block_list[0])
+        suffix_name = '\.' + self._get_suffix_name(url_list[0])
 
         # Split same block.
         header = same_block.split('//')[0] + '//'
         latter_part = same_block.split('//')[1]
 
         # If only one item,delete suffix name.
-        if len(same_block) == len(specific_block_list[0]):
-            latter_part = latter_part[0:len(latter_part) - len(self._get_suffix_name(specific_block_list[0])) - 1]
+        if len(same_block) == len(url_list[0]):
+            latter_part = latter_part[0:len(latter_part) - len(self._get_suffix_name(url_list[0])) - 1]
 
         # Split latter part.
         latter_part_list = latter_part.split('/')
@@ -310,7 +393,7 @@ class MiniSpider:
             pattern_block = ''.join(temp)
             last_block = last_block + '/' + pattern_block
         # Check if need supplement.
-        if len(same_block) == len(specific_block_list[0]):
+        if len(same_block) == len(url_list[0]):
             char_supplement = ''
         else:
             char_supplement = '\S*'
@@ -319,7 +402,7 @@ class MiniSpider:
 
         return result_pattern
 
-    def make_specific_tag_pattern(self, specific_block_list, host):
+    def make_specific_tag_pattern(self, specific_block_list):
         """Make specific pattern for tag URL."""
         # Get longest match block.
         same_size = self.find_longest_size(specific_block_list)
@@ -361,59 +444,4 @@ class MiniSpider:
             char_supplement = '\S*'
 
         pattern = header + '(' + main_block + char_supplement + suffix_name + ')' + '\S*"'
-        return pattern, host
-
-    def choose_block(self, num, start=None, end=None):
-        # Choose block to make specific pattern. +1 used fix python array problem.
-        block = self._read_temp()['result'][num]
-        http_flag = self._read_temp()['http_flag']
-        host = self._read_temp()['host']
-
-        # Make tag pattern.
-        if num >= http_flag:
-            if start is not None and end is not None:
-                specific_pattern = self.make_specific_tag_pattern(block[start:end + 1], host)
-            elif start is not None:
-                specific_pattern = self.make_specific_tag_pattern(block[start:start + 1], host)
-            else:
-                specific_pattern = self.make_specific_tag_pattern(block[0:], host)
-        # Make http pattern.
-        else:
-            if start is not None and end is not None:
-                specific_pattern = self.make_specific_http_pattern(block[start:end + 1])
-            elif start is not None:
-                specific_pattern = self.make_specific_http_pattern(block[start:start + 1])
-            else:
-                specific_pattern = self.make_specific_http_pattern(block[0:])
-
-        return specific_pattern
-
-    def start(self, url=None):
-        # 1.Get url.
-        if url is None:
-            # If url is not provided, use SQL data.
-            try:
-                id, url, status = MiniSpiderSQL().pop('next_url')
-            except TypeError:
-                raise Exception('Please input original url!')
-
-        # 2.Read content.
-        try:
-            content = self._url_read(url)
-            Extractor(content).run_all_extractor(0)
-        except Exception as e:
-            print(e)
-        MiniSpiderSQL().print_all()
-
-        # 3.Loop.
-        while MiniSpiderSQL().num_available('next_url'):
-            id, url, status = MiniSpiderSQL().pop('next_url')
-
-            try:
-                content = self._url_read(url)
-                Extractor(content).run_all_extractor(id)
-            except Exception as e:
-                MiniSpiderSQL().update_status('next_url', 2, id)
-                print(e)
-
-            MiniSpiderSQL().print_all()
+        return pattern
